@@ -3,3 +3,5 @@ dist/
 .env
 *.tgz
 .DS_Store
+certs/
+scripts/debug-output/

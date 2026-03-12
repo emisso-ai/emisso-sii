@@ -19,6 +19,22 @@ export function getPortalBaseUrl(env: SiiEnv): string {
 }
 
 /**
+ * Returns the auth gateway URL. Always zeusr for both cert and production.
+ */
+export function getPortalAuthUrl(): string {
+  return "https://zeusr.sii.cl";
+}
+
+/**
+ * Returns the post-login referencia URL based on environment.
+ */
+export function getPortalReferencia(env: SiiEnv): string {
+  return env === "production"
+    ? "https://misii.sii.cl/cgi_misii/siihome.cgi"
+    : "https://misiir.sii.cl/cgi_misii/siihome.cgi";
+}
+
+/**
  * Splits a RUT into body and verification digit.
  * e.g. "76.123.456-7" → { rutBody: "76123456", dv: "7" }
  */
