@@ -136,3 +136,12 @@ export const RecepcionResponseSchema = z.object({
   detail: z.string().optional(),
 });
 export type RecepcionResponse = z.infer<typeof RecepcionResponseSchema>;
+
+// --- Portal Configuration ---
+
+export const PortalConfigSchema = z.object({
+  rut: z.string().describe("Full RUT with DV, e.g. 76123456-7"),
+  claveTributaria: z.string().describe("SII portal password"),
+  env: SiiEnvSchema,
+});
+export type PortalConfig = z.infer<typeof PortalConfigSchema>;

@@ -1,12 +1,35 @@
 import type { SiiConfig, SiiEnv } from "../types";
 
 /**
- * Returns the base URL for SII web services based on environment.
+ * Returns the base URL for SII SOAP web services based on environment.
  */
 export function getSiiBaseUrl(env: SiiEnv): string {
   return env === "production"
     ? "https://palena.sii.cl"
     : "https://maullin.sii.cl";
+}
+
+/**
+ * Returns the base URL for SII portal based on environment.
+ */
+export function getPortalBaseUrl(env: SiiEnv): string {
+  return env === "production"
+    ? "https://homer.sii.cl"
+    : "https://zeusr.sii.cl";
+}
+
+/**
+ * Splits a RUT into body and verification digit.
+ * e.g. "76.123.456-7" → { rutBody: "76123456", dv: "7" }
+ */
+export function splitRut(rut: string): { rutBody: string; dv: string } {
+  const formatted = formatRut(rut);
+  const dashIndex = formatted.lastIndexOf("-");
+  if (dashIndex === -1) throw new Error(`Invalid RUT format: ${rut}`);
+  return {
+    rutBody: formatted.substring(0, dashIndex),
+    dv: formatted.substring(dashIndex + 1),
+  };
 }
 
 /**

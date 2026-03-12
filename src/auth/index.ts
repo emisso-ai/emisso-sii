@@ -1,4 +1,14 @@
 import type { SiiConfig } from "../types";
+import { loadCertFromFile } from "../cert";
+import { createSiiHttpClient } from "../http";
+import { getSiiBaseUrl } from "../utils";
+import { buildSignedSeedXml } from "./xml-dsig";
+import {
+  buildCrSeedSoapEnvelope,
+  buildGetTokenSoapEnvelope,
+  parseSeedFromResponse,
+  parseTokenFromResponse,
+} from "./soap";
 
 export interface SiiToken {
   token: string;
@@ -14,41 +24,62 @@ export interface SiiToken {
  * 2. Sign seed with certificate private key
  * 3. Exchange signed seed for token
  */
-export async function authenticate(_config: SiiConfig): Promise<SiiToken> {
-  // TODO: Implement SII authentication flow
-  // 1. GET /DTEWS/CrSeed.jws → extract seed
-  // 2. Sign seed XML with certificate
-  // 3. POST /DTEWS/GetTokenFromSeed.jws → extract token
-  throw new Error("Not implemented");
+export async function authenticate(config: SiiConfig): Promise<SiiToken> {
+  const client = createSiiHttpClient({ rateLimitMs: 0 });
+  const seed = await getSeed(config, client);
+  const signedSeed = signSeed(seed, config.certPath, config.certPassword);
+  return getToken(signedSeed, config, client);
 }
 
 /**
  * Retrieves the authentication seed from SII.
  */
-export async function getSeed(_config: SiiConfig): Promise<string> {
-  // TODO: GET request to SII seed endpoint, parse XML response
-  throw new Error("Not implemented");
+export async function getSeed(
+  config: SiiConfig,
+  client?: ReturnType<typeof createSiiHttpClient>
+): Promise<string> {
+  const http = client ?? createSiiHttpClient({ rateLimitMs: 0 });
+  const baseUrl = getSiiBaseUrl(config.env);
+  const soapEnvelope = buildCrSeedSoapEnvelope();
+  const response = await http.post(
+    `${baseUrl}/DTEWS/CrSeed.jws`,
+    soapEnvelope,
+    { headers: { "Content-Type": "text/xml; charset=utf-8" } }
+  );
+  return parseSeedFromResponse(response.data);
 }
 
 /**
  * Signs the seed XML using the digital certificate.
  */
-export async function signSeed(
-  _seed: string,
-  _certPath: string,
-  _certPassword: string
-): Promise<string> {
-  // TODO: Load .p12 certificate, extract private key, sign XML
-  throw new Error("Not implemented");
+export function signSeed(
+  seed: string,
+  certPath: string,
+  certPassword: string
+): string {
+  const certData = loadCertFromFile(certPath, certPassword);
+  return buildSignedSeedXml(seed, certData);
 }
 
 /**
  * Exchanges a signed seed for an authentication token.
  */
 export async function getToken(
-  _signedSeed: string,
-  _config: SiiConfig
+  signedSeed: string,
+  config: SiiConfig,
+  client?: ReturnType<typeof createSiiHttpClient>
 ): Promise<SiiToken> {
-  // TODO: POST signed seed to SII token endpoint
-  throw new Error("Not implemented");
+  const http = client ?? createSiiHttpClient({ rateLimitMs: 0 });
+  const baseUrl = getSiiBaseUrl(config.env);
+  const soapEnvelope = buildGetTokenSoapEnvelope(signedSeed);
+  const response = await http.post(
+    `${baseUrl}/DTEWS/GetTokenFromSeed.jws`,
+    soapEnvelope,
+    { headers: { "Content-Type": "text/xml; charset=utf-8" } }
+  );
+  const { token } = parseTokenFromResponse(response.data);
+  return {
+    token,
+    expiresAt: new Date(Date.now() + 30 * 60 * 1000), // SII tokens expire in ~30 min
+  };
 }
