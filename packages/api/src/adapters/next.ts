@@ -32,6 +32,10 @@ export interface SiiRouterConfig {
    * Return null to reject the request.
    */
   resolveTenantId?: (req: Request) => string | null | Promise<string | null>;
+  /** Encrypt sensitive fields before storing in database */
+  encrypt?: (plaintext: string) => string;
+  /** Decrypt sensitive fields when reading from database */
+  decrypt?: (ciphertext: string) => string;
 }
 
 export function createSiiRouter(config: SiiRouterConfig) {
@@ -48,10 +52,13 @@ export function createSiiRouter(config: SiiRouterConfig) {
   const credentialService = createCredentialService({
     credentialRepo,
     tokenCacheRepo,
+    encrypt: config.encrypt,
+    decrypt: config.decrypt,
   });
   const authService = createAuthService({
     credentialRepo,
     tokenCacheRepo,
+    decrypt: config.decrypt,
   });
   const invoiceService = createInvoiceService({
     invoiceRepo,

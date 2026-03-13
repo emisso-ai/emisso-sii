@@ -37,8 +37,10 @@ async function authenticateSoap(
 export function createAuthService(deps: {
   credentialRepo: CredentialRepo;
   tokenCacheRepo: TokenCacheRepo;
+  decrypt?: (ciphertext: string) => string;
 }) {
   const { credentialRepo, tokenCacheRepo } = deps;
+  const dec = (v: string) => (deps.decrypt ? deps.decrypt(v) : v);
 
   return {
     /**
@@ -63,9 +65,9 @@ export function createAuthService(deps: {
           return { token: cached.tokenValue, expiresAt: new Date(cached.expiresAt) };
         }
 
-        // Authenticate with SII
+        // Authenticate with SII (decrypt credentials before use)
         const siiToken = yield* Effect.tryPromise({
-          try: () => authenticateSoap(cred.certBase64!, cred.certPassword!, env),
+          try: () => authenticateSoap(dec(cred.certBase64!), dec(cred.certPassword!), env),
           catch: (e) =>
             SiiAuthError.make(`SOAP authentication failed: ${toMessage(e)}`, e),
         });
@@ -98,12 +100,12 @@ export function createAuthService(deps: {
           );
         }
 
-        // Login to portal
+        // Login to portal (decrypt credentials before use)
         const session = yield* Effect.tryPromise({
           try: () =>
             portalLogin({
               rut: cred.portalRut!,
-              claveTributaria: cred.portalPassword!,
+              claveTributaria: dec(cred.portalPassword!),
               env,
             }),
           catch: (e) =>
@@ -129,7 +131,7 @@ export function createAuthService(deps: {
         // Build test effects
         const soapTest = cred.certBase64 && cred.certPassword
           ? Effect.tryPromise({
-              try: () => authenticateSoap(cred.certBase64!, cred.certPassword!, env).then(() => true),
+              try: () => authenticateSoap(dec(cred.certBase64!), dec(cred.certPassword!), env).then(() => true),
               catch: (e) => toMessage(e),
             }).pipe(Effect.catchAll((msg) => {
               errors.push(`SOAP: ${msg}`);
@@ -145,7 +147,7 @@ export function createAuthService(deps: {
               try: () =>
                 portalLogin({
                   rut: cred.portalRut!,
-                  claveTributaria: cred.portalPassword!,
+                  claveTributaria: dec(cred.portalPassword!),
                   env,
                 }).then(() => true),
               catch: (e) => toMessage(e),
