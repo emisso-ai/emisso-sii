@@ -48,7 +48,7 @@ export function createSiiHttpClient(
   });
 
   // --- Rate limiting ---
-  let lastRequestTime = 0;
+  let nextAllowedTime = 0;
 
   // --- Cookie jar + rate limit request interceptor ---
   instance.interceptors.request.use(
@@ -56,13 +56,12 @@ export function createSiiHttpClient(
       // Rate limit: wait if needed
       if (rateLimitMs > 0) {
         const now = Date.now();
-        const elapsed = now - lastRequestTime;
-        if (lastRequestTime > 0 && elapsed < rateLimitMs) {
+        if (now < nextAllowedTime) {
           await new Promise((resolve) =>
-            setTimeout(resolve, rateLimitMs - elapsed),
+            setTimeout(resolve, nextAllowedTime - now),
           );
         }
-        lastRequestTime = Date.now();
+        nextAllowedTime = Date.now() + rateLimitMs;
       }
 
       // Inject cookies from jar
@@ -79,37 +78,36 @@ export function createSiiHttpClient(
   );
 
   // --- Response interceptor: store cookies + detect auth expired ---
-  instance.interceptors.response.use((response: AxiosResponse) => {
-    // Store cookies from response
-    const url = buildUrl(response.config);
-    const setCookieHeaders = response.headers["set-cookie"];
-    if (url && setCookieHeaders) {
-      for (const cookie of setCookieHeaders) {
-        try {
-          cookieJar.setCookieSync(cookie, url);
-        } catch {
-          // Ignore malformed cookies
-        }
+  instance.interceptors.response.use(
+    (response: AxiosResponse) => {
+      // Store cookies from response
+      storeCookiesFromResponse(response, cookieJar);
+
+      // Detect auth expiry
+      if (
+        typeof response.data === "string" &&
+        response.data.includes(AUTH_EXPIRED_SENTINEL)
+      ) {
+        throw new SiiAuthExpiredError();
       }
-    }
 
-    // Detect auth expiry
-    if (
-      typeof response.data === "string" &&
-      response.data.includes(AUTH_EXPIRED_SENTINEL)
-    ) {
-      throw new SiiAuthExpiredError();
-    }
-
-    return response;
-  });
+      return response;
+    },
+    (error: any) => {
+      // Store cookies from error responses before re-throwing
+      if (error?.response) {
+        storeCookiesFromResponse(error.response, cookieJar);
+      }
+      throw error;
+    },
+  );
 
   // --- Retry on 5xx and network errors ---
   axiosRetry(instance, {
     retries,
     retryDelay: axiosRetry.exponentialDelay,
     retryCondition: (error) =>
-      axiosRetry.isNetworkOrIdempotentRequestError(error) ||
+      axiosRetry.isNetworkError(error) ||
       (error.response?.status !== undefined && error.response.status >= 500),
   });
 
@@ -118,6 +116,21 @@ export function createSiiHttpClient(
   client.cookieJar = cookieJar;
 
   return client;
+}
+
+/** Store cookies from an Axios response into the cookie jar. */
+function storeCookiesFromResponse(response: AxiosResponse, jar: CookieJar): void {
+  const url = buildUrl(response.config);
+  const setCookieHeaders = response.headers["set-cookie"];
+  if (url && setCookieHeaders) {
+    for (const cookie of setCookieHeaders) {
+      try {
+        jar.setCookieSync(cookie, url);
+      } catch {
+        // Ignore malformed cookies
+      }
+    }
+  }
 }
 
 /** Build a full URL from an axios request config. */

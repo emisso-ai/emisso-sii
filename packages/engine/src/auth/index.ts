@@ -88,6 +88,7 @@ export async function getToken(
   const { token } = parseTokenFromResponse(response.data);
   return {
     token,
-    expiresAt: new Date(Date.now() + 30 * 60 * 1000), // SII tokens expire in ~30 min
+    // SII tokens expire in ~30 min, use 28 min as safety margin
+    expiresAt: new Date(Date.now() + 28 * 60 * 1000),
   };
 }

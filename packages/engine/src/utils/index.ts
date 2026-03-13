@@ -42,9 +42,11 @@ export function splitRut(rut: string): { rutBody: string; dv: string } {
   const formatted = formatRut(rut);
   const dashIndex = formatted.lastIndexOf("-");
   if (dashIndex === -1) throw new Error(`Invalid RUT format: ${rut}`);
+  const dv = formatted.substring(dashIndex + 1);
+  if (dv === "") throw new Error(`Invalid RUT format: missing verification digit in ${rut}`);
   return {
     rutBody: formatted.substring(0, dashIndex),
-    dv: formatted.substring(dashIndex + 1),
+    dv,
   };
 }
 
@@ -53,7 +55,7 @@ export function splitRut(rut: string): { rutBody: string; dv: string } {
  * e.g. "76.123.456-7" → "76123456-7"
  */
 export function formatRut(rut: string): string {
-  return rut.replace(/\./g, "").trim();
+  return rut.trim().replace(/\s/g, "").replace(/\./g, "");
 }
 
 /**
@@ -84,8 +86,12 @@ export function validateRut(rut: string): boolean {
  * Loads SII configuration from environment variables.
  */
 export function loadConfigFromEnv(): SiiConfig {
+  const certPath = process.env.SII_CERT_PATH;
+  if (!certPath) {
+    throw new Error("SII_CERT_PATH environment variable is not set");
+  }
   return {
-    certPath: process.env.SII_CERT_PATH ?? "",
+    certPath,
     certPassword: process.env.SII_CERT_PASSWORD ?? "",
     env: (process.env.SII_ENV as SiiEnv) ?? "certification",
   };

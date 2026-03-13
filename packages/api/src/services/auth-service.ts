@@ -26,6 +26,9 @@ async function authenticateSoap(
   env: SiiEnv,
 ): Promise<SiiToken> {
   const certData = loadCertFromBase64(certBase64, certPassword);
+  // certPath and certPassword are required by SiiConfig but unused by getSeed/getToken,
+  // which only need `env` to resolve the SOAP endpoint URL. We pass empty strings
+  // because authentication is handled via the in-memory certData / signedSeed flow.
   const seed = await getSeed({ certPath: "", certPassword: "", env });
   const signedSeed = signSeedFromCertData(seed, certData);
   return getToken(signedSeed, { certPath: "", certPassword: "", env });

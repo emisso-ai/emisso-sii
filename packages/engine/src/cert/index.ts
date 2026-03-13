@@ -70,7 +70,10 @@ export function loadCertFromBase64(
 
 function bigIntToBase64(n: forge.jsbn.BigInteger): string {
   const hex = n.toString(16);
-  const bytes = forge.util.hexToBytes(hex.length % 2 ? "0" + hex : hex);
+  let bytes = forge.util.hexToBytes(hex.length % 2 ? "0" + hex : hex);
+  // DER positive integer encoding: prepend 0x00 when first byte >= 0x80
+  const firstByte = bytes.charCodeAt(0);
+  if (firstByte >= 0x80) bytes = "\x00" + bytes;
   return forge.util.encode64(bytes);
 }
 

@@ -4,6 +4,11 @@ import { rsaSha1Sign, sha1Digest } from "../cert";
 const DSIG_NS = "http://www.w3.org/2000/09/xmldsig#";
 const C14N_ALG = "http://www.w3.org/TR/2001/REC-xml-c14n-20010315";
 
+/** Escapes XML special characters to prevent injection. */
+function escapeXml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 /**
  * Build a signed seed XML for SII GetTokenFromSeed exchange.
  * Applies enveloped XML-DSIG signature.
@@ -13,7 +18,8 @@ export function buildSignedSeedXml(
   certData: CertificateData
 ): string {
   // 1. Build unsigned document (the content that gets digested)
-  const unsignedDoc = `<getToken><item><Semilla>${seed}</Semilla></item></getToken>`;
+  const safeSeed = escapeXml(seed);
+  const unsignedDoc = `<getToken><item><Semilla>${safeSeed}</Semilla></item></getToken>`;
 
   // 2. Compute DigestValue of the unsigned document
   // (enveloped-signature transform means we digest the doc without the Signature element)
@@ -34,6 +40,9 @@ export function buildSignedSeedXml(
     `</SignedInfo>`;
 
   // 4. Compute SignatureValue (RSA-SHA1 of canonical SignedInfo)
+  // NOTE: C14N is not applied — the SignedInfo is signed as-is. This works because
+  // the XML is constructed deterministically with no whitespace variation, so the
+  // canonical form equals the raw form.
   const signatureValue = rsaSha1Sign(signedInfo, certData.privateKey);
 
   // 5. Build KeyInfo
@@ -59,5 +68,5 @@ export function buildSignedSeedXml(
     `</Signature>`;
 
   // 7. Insert Signature into document (after <item>)
-  return `<getToken><item><Semilla>${seed}</Semilla></item>${signature}</getToken>`;
+  return `<getToken><item><Semilla>${safeSeed}</Semilla></item>${signature}</getToken>`;
 }

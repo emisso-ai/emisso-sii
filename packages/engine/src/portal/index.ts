@@ -62,6 +62,8 @@ export async function portalLogin(
   const { rutBody, dv } = splitRut(config.rut);
   const authUrl = getPortalAuthUrl();
   const referencia = getPortalReferencia(config.env);
+  // SII's login page expects the referencia URL as a bare query string (not a named parameter).
+  // This is SII's actual format — the raw URL IS the query string intentionally.
   const loginUrl = `${authUrl}/AUT2000/InicioAutenticacion/IngresoRutClave.html?${referencia}`;
 
   let extractedCookies: Array<{
@@ -73,10 +75,12 @@ export async function portalLogin(
     httpOnly: boolean;
     secure: boolean;
   }> = [];
+  let finalPageUrl = "";
 
   const crawler = new PlaywrightCrawler({
     headless: options?.headless ?? true,
-    maxRequestsPerCrawl: 1,
+    // Allow up to 10 requests to handle Queue-it waiting room redirects in production
+    maxRequestsPerCrawl: 10,
     requestHandlerTimeoutSecs: 60,
     browserPoolOptions: {
       useFingerprints: false,
@@ -95,7 +99,8 @@ export async function portalLogin(
         page.click("#bt_ingresar"),
       ]);
 
-      log.info(`Landed on: ${page.url()}`);
+      finalPageUrl = page.url();
+      log.info(`Landed on: ${finalPageUrl}`);
 
       // Extract all cookies from the browser context
       extractedCookies = await page.context().cookies();
@@ -107,6 +112,10 @@ export async function portalLogin(
 
   if (extractedCookies.length === 0) {
     throw new Error("Browser login failed: no cookies captured");
+  }
+
+  if (finalPageUrl.includes("IngresoRutClave")) {
+    throw new Error("SII portal login failed: invalid credentials or CAPTCHA");
   }
 
   // Convert browser cookies to tough-cookie jar and create HTTP client

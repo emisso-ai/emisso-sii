@@ -46,11 +46,13 @@ function extractRespuesta(
   parsed: Record<string, any>,
   operation: string
 ): Record<string, any> {
-  return (
+  const respuesta =
     parsed?.Envelope?.Body?.[`${operation}Response`]?.return?.RESPUESTA ??
-    parsed?.RESPUESTA ??
-    parsed
-  );
+    parsed?.RESPUESTA;
+  if (!respuesta) {
+    throw new Error("Unexpected SII SOAP response structure");
+  }
+  return respuesta;
 }
 
 /**
@@ -78,7 +80,7 @@ export function parseSeedFromResponse(responseXml: string): string {
   assertEstadoOk(respuesta, "CrSeed");
 
   const semilla = respuesta?.RESP_BODY?.SEMILLA;
-  if (!semilla) {
+  if (semilla == null || semilla === "") {
     throw new Error("Could not extract seed from SII response");
   }
 
@@ -97,7 +99,7 @@ export function parseTokenFromResponse(responseXml: string): {
   const estado = assertEstadoOk(respuesta, "GetTokenFromSeed");
 
   const token = respuesta?.RESP_BODY?.TOKEN;
-  if (!token) {
+  if (token == null || token === "") {
     throw new Error("Could not extract token from SII response");
   }
 

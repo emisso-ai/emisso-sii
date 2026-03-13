@@ -7,13 +7,26 @@ import { SiiEnvSchema, IssueTypeSchema, DteTypeSchema } from "@emisso/sii";
 
 // ── Credentials ──
 
-export const SaveCredentialsSchema = z.object({
-  env: SiiEnvSchema.default("production"),
-  certBase64: z.string().optional(),
-  certPassword: z.string().optional(),
-  portalRut: z.string().optional(),
-  portalPassword: z.string().optional(),
-});
+export const SaveCredentialsSchema = z
+  .object({
+    env: SiiEnvSchema.default("production"),
+    certBase64: z.string().optional(),
+    certPassword: z.string().optional(),
+    portalRut: z.string().optional(),
+    portalPassword: z.string().optional(),
+  })
+  .refine(
+    (d) => (d.certBase64 || d.certPassword) || (d.portalRut || d.portalPassword),
+    { message: "At least one credential pair is required: certificate (certBase64 + certPassword) or portal (portalRut + portalPassword)" },
+  )
+  .refine(
+    (d) => (!d.certBase64 && !d.certPassword) || (d.certBase64 && d.certPassword),
+    { message: "certBase64 and certPassword must both be provided or both omitted" },
+  )
+  .refine(
+    (d) => (!d.portalRut && !d.portalPassword) || (d.portalRut && d.portalPassword),
+    { message: "portalRut and portalPassword must both be provided or both omitted" },
+  );
 export type SaveCredentialsInput = z.infer<typeof SaveCredentialsSchema>;
 
 // ── Invoice sync ──
