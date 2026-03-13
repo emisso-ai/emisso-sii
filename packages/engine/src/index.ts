@@ -8,3 +8,4 @@ export * from "./folios";
 export * from "./recepcion";
 export * from "./estado";
 export * from "./portal";
+export * from "./rcv";

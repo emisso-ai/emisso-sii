@@ -36,7 +36,7 @@ function playwrightCookiesToJar(
     const cookie = new Cookie({
       key: c.name,
       value: c.value,
-      domain: c.domain,
+      domain: c.domain.replace(/^\./, ""),
       path: c.path,
       expires: c.expires > 0 ? new Date(c.expires * 1000) : "Infinity",
       httpOnly: c.httpOnly,
