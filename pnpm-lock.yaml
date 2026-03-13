@@ -23,9 +23,6 @@ importers:
       effect:
         specifier: ^3.0.0
         version: 3.19.19
-      playwright-core:
-        specifier: ^1.58.0
-        version: 1.58.2
       postgres:
         specifier: ^3.4.0
         version: 3.4.8
@@ -42,6 +39,9 @@ importers:
       drizzle-kit:
         specifier: ^0.30.0
         version: 0.30.6
+      playwright-core:
+        specifier: ^1.58.0
+        version: 1.58.2
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)
