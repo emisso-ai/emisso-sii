@@ -1,9 +1,14 @@
 import { CookieJar, Cookie } from "tough-cookie";
-import { PlaywrightCrawler } from "crawlee";
+import type { Browser } from "playwright-core";
 import type { SiiConfig, PortalConfig, SiiEnv } from "../types";
 import { createSiiHttpClient, AUTH_EXPIRED_SENTINEL, type SiiHttpClient } from "../http";
 import { getPortalBaseUrl, getPortalAuthUrl, getPortalReferencia, splitRut } from "../utils";
 import { authenticate, type SiiToken } from "../auth";
+
+export interface PortalLoginOptions {
+  headless?: boolean;
+  connectBrowser?: () => Promise<Browser>;
+}
 
 export interface PortalSession {
   httpClient: SiiHttpClient;
@@ -49,7 +54,7 @@ function playwrightCookiesToJar(
 }
 
 /**
- * Logs into SII portal using a browser (Playwright via Crawlee).
+ * Logs into SII portal using a browser (Playwright).
  *
  * SII's production portal uses Queue-it waiting rooms and JavaScript challenges
  * that block raw HTTP login. The browser handles these automatically, then we
@@ -57,7 +62,7 @@ function playwrightCookiesToJar(
  */
 export async function portalLogin(
   config: PortalConfig,
-  options?: { headless?: boolean },
+  options?: PortalLoginOptions,
 ): Promise<PortalSession> {
   const { rutBody, dv } = splitRut(config.rut);
   const authUrl = getPortalAuthUrl();
@@ -66,74 +71,69 @@ export async function portalLogin(
   // This is SII's actual format — the raw URL IS the query string intentionally.
   const loginUrl = `${authUrl}/AUT2000/InicioAutenticacion/IngresoRutClave.html?${referencia}`;
 
-  let extractedCookies: Array<{
-    name: string;
-    value: string;
-    domain: string;
-    path: string;
-    expires: number;
-    httpOnly: boolean;
-    secure: boolean;
-  }> = [];
-  let finalPageUrl = "";
-
-  const crawler = new PlaywrightCrawler({
-    headless: options?.headless ?? true,
-    // Allow up to 10 requests to handle Queue-it waiting room redirects in production
-    maxRequestsPerCrawl: 10,
-    requestHandlerTimeoutSecs: 60,
-    browserPoolOptions: {
-      useFingerprints: false,
-    },
-    async requestHandler({ page, log }) {
-      log.info("Waiting for login form...");
-      await page.waitForSelector("#rutcntr", { timeout: 30_000 });
-
-      log.info(`Filling RUT: ${rutBody}-${dv}`);
-      await page.fill("#rutcntr", `${rutBody}-${dv}`);
-      await page.fill("#clave", config.claveTributaria);
-
-      log.info("Clicking login...");
-      await Promise.all([
-        page.waitForNavigation({ waitUntil: "networkidle", timeout: 30_000 }),
-        page.click("#bt_ingresar"),
-      ]);
-
-      finalPageUrl = page.url();
-      log.info(`Landed on: ${finalPageUrl}`);
-
-      // Extract all cookies from the browser context
-      extractedCookies = await page.context().cookies();
-      log.info(`Extracted ${extractedCookies.length} cookies`);
-    },
-  });
-
-  await crawler.run([loginUrl]);
-
-  if (extractedCookies.length === 0) {
-    throw new Error("Browser login failed: no cookies captured");
+  const isOwned = !options?.connectBrowser;
+  let browser: Browser;
+  if (options?.connectBrowser) {
+    browser = await options.connectBrowser();
+  } else {
+    let pw;
+    try {
+      pw = await import("playwright");
+    } catch {
+      throw new Error(
+        "playwright is required for local browser login. " +
+        "Install it (npm add playwright) or provide connectBrowser for remote browser support."
+      );
+    }
+    browser = await pw.chromium.launch({ headless: options?.headless ?? true });
   }
 
-  if (finalPageUrl.includes("IngresoRutClave")) {
-    throw new Error("SII portal login failed: invalid credentials or CAPTCHA");
+  try {
+    // Reuse pre-existing context/page (Browserbase creates these) or create new ones
+    const context = browser.contexts()[0] ?? await browser.newContext();
+    const page = context.pages()[0] ?? await context.newPage();
+
+    await page.goto(loginUrl);
+    await page.waitForSelector("#rutcntr", { timeout: 30_000 });
+
+    await page.fill("#rutcntr", `${rutBody}-${dv}`);
+    await page.fill("#clave", config.claveTributaria);
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: "networkidle", timeout: 30_000 }),
+      page.click("#bt_ingresar"),
+    ]);
+
+    const finalPageUrl = page.url();
+    const extractedCookies = await context.cookies();
+
+    if (extractedCookies.length === 0) {
+      throw new Error("Browser login failed: no cookies captured");
+    }
+
+    if (finalPageUrl.includes("IngresoRutClave")) {
+      throw new Error("SII portal login failed: invalid credentials or CAPTCHA");
+    }
+
+    // Convert browser cookies to tough-cookie jar and create HTTP client
+    const cookieJar = playwrightCookiesToJar(extractedCookies);
+    const client = createSiiHttpClient({ cookieJar, rateLimitMs: 0 });
+
+    const session: PortalSession = {
+      httpClient: client,
+      env: config.env,
+      isAuthenticated: true,
+      refresh: async () => {
+        const refreshed = await portalLogin(config, options);
+        session.httpClient = refreshed.httpClient;
+        session.isAuthenticated = refreshed.isAuthenticated;
+      },
+    };
+
+    return session;
+  } finally {
+    if (isOwned) await browser.close();
   }
-
-  // Convert browser cookies to tough-cookie jar and create HTTP client
-  const cookieJar = playwrightCookiesToJar(extractedCookies);
-  const client = createSiiHttpClient({ cookieJar, rateLimitMs: 0 });
-
-  const session: PortalSession = {
-    httpClient: client,
-    env: config.env,
-    isAuthenticated: true,
-    refresh: async () => {
-      const refreshed = await portalLogin(config, options);
-      session.httpClient = refreshed.httpClient;
-      session.isAuthenticated = refreshed.isAuthenticated;
-    },
-  };
-
-  return session;
 }
 
 /**

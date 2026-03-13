@@ -9,8 +9,14 @@ import { NotFoundError, type AppError } from "../core/effect/app-error.js";
 export function createCredentialService(deps: {
   credentialRepo: CredentialRepo;
   tokenCacheRepo: TokenCacheRepo;
+  encrypt?: (plaintext: string) => string;
+  decrypt?: (ciphertext: string) => string;
 }) {
   const { credentialRepo, tokenCacheRepo } = deps;
+  const enc = (v: string | null | undefined) =>
+    v && deps.encrypt ? deps.encrypt(v) : v;
+  const dec = (v: string | null) =>
+    v && deps.decrypt ? deps.decrypt(v) : v;
 
   return {
     save(
@@ -19,10 +25,10 @@ export function createCredentialService(deps: {
     ): Effect.Effect<Credential, AppError> {
       return credentialRepo.upsert(tenantId, {
         env: input.env,
-        certBase64: input.certBase64 ?? null,
-        certPassword: input.certPassword ?? null,
+        certBase64: enc(input.certBase64) ?? null,
+        certPassword: enc(input.certPassword) ?? null,
         portalRut: input.portalRut ?? null,
-        portalPassword: input.portalPassword ?? null,
+        portalPassword: enc(input.portalPassword) ?? null,
       });
     },
 

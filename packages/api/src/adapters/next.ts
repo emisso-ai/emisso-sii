@@ -32,9 +32,19 @@ export interface SiiRouterConfig {
    * Return null to reject the request.
    */
   resolveTenantId?: (req: Request) => string | null | Promise<string | null>;
+  /** Encrypt sensitive fields before storing in database */
+  encrypt?: (plaintext: string) => string;
+  /** Decrypt sensitive fields when reading from database */
+  decrypt?: (ciphertext: string) => string;
+  /** Connect to a remote browser (e.g., Browserbase) for portal login */
+  connectBrowser?: () => Promise<import("playwright-core").Browser>;
 }
 
 export function createSiiRouter(config: SiiRouterConfig) {
+  if (!!config.encrypt !== !!config.decrypt) {
+    throw new Error("SiiRouterConfig: encrypt and decrypt must be provided together");
+  }
+
   const sql = postgres(config.databaseUrl);
   const db: PostgresJsDatabase = drizzle(sql);
 
@@ -48,10 +58,14 @@ export function createSiiRouter(config: SiiRouterConfig) {
   const credentialService = createCredentialService({
     credentialRepo,
     tokenCacheRepo,
+    encrypt: config.encrypt,
+    decrypt: config.decrypt,
   });
   const authService = createAuthService({
     credentialRepo,
     tokenCacheRepo,
+    decrypt: config.decrypt,
+    connectBrowser: config.connectBrowser,
   });
   const invoiceService = createInvoiceService({
     invoiceRepo,

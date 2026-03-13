@@ -7,6 +7,7 @@ import {
   portalLogin,
   type SiiToken,
   type PortalSession,
+  type PortalLoginOptions,
   type SiiEnv,
 } from "@emisso/sii";
 import type { CredentialRepo } from "../repos/credential-repo.js";
@@ -37,8 +38,11 @@ async function authenticateSoap(
 export function createAuthService(deps: {
   credentialRepo: CredentialRepo;
   tokenCacheRepo: TokenCacheRepo;
+  decrypt?: (ciphertext: string) => string;
+  connectBrowser?: PortalLoginOptions["connectBrowser"];
 }) {
   const { credentialRepo, tokenCacheRepo } = deps;
+  const dec = (v: string) => (deps.decrypt ? deps.decrypt(v) : v);
 
   return {
     /**
@@ -63,9 +67,9 @@ export function createAuthService(deps: {
           return { token: cached.tokenValue, expiresAt: new Date(cached.expiresAt) };
         }
 
-        // Authenticate with SII
+        // Authenticate with SII (decrypt credentials before use)
         const siiToken = yield* Effect.tryPromise({
-          try: () => authenticateSoap(cred.certBase64!, cred.certPassword!, env),
+          try: () => authenticateSoap(dec(cred.certBase64!), dec(cred.certPassword!), env),
           catch: (e) =>
             SiiAuthError.make(`SOAP authentication failed: ${toMessage(e)}`, e),
         });
@@ -98,14 +102,13 @@ export function createAuthService(deps: {
           );
         }
 
-        // Login to portal
+        // Login to portal (decrypt credentials before use)
         const session = yield* Effect.tryPromise({
           try: () =>
-            portalLogin({
-              rut: cred.portalRut!,
-              claveTributaria: cred.portalPassword!,
-              env,
-            }),
+            portalLogin(
+              { rut: cred.portalRut!, claveTributaria: dec(cred.portalPassword!), env },
+              { connectBrowser: deps.connectBrowser },
+            ),
           catch: (e) =>
             SiiAuthError.make(`Portal login failed: ${toMessage(e)}`, e),
         });
@@ -129,7 +132,7 @@ export function createAuthService(deps: {
         // Build test effects
         const soapTest = cred.certBase64 && cred.certPassword
           ? Effect.tryPromise({
-              try: () => authenticateSoap(cred.certBase64!, cred.certPassword!, env).then(() => true),
+              try: () => authenticateSoap(dec(cred.certBase64!), dec(cred.certPassword!), env).then(() => true),
               catch: (e) => toMessage(e),
             }).pipe(Effect.catchAll((msg) => {
               errors.push(`SOAP: ${msg}`);
@@ -143,11 +146,10 @@ export function createAuthService(deps: {
         const portalTest = cred.portalRut && cred.portalPassword
           ? Effect.tryPromise({
               try: () =>
-                portalLogin({
-                  rut: cred.portalRut!,
-                  claveTributaria: cred.portalPassword!,
-                  env,
-                }).then(() => true),
+                portalLogin(
+                  { rut: cred.portalRut!, claveTributaria: dec(cred.portalPassword!), env },
+                  { connectBrowser: deps.connectBrowser },
+                ).then(() => true),
               catch: (e) => toMessage(e),
             }).pipe(Effect.catchAll((msg) => {
               errors.push(`Portal: ${msg}`);
