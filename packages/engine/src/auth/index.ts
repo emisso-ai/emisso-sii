@@ -1,5 +1,5 @@
 import type { SiiConfig } from "../types";
-import { loadCertFromFile } from "../cert";
+import { loadCertFromFile, type CertificateData } from "../cert";
 import { createSiiHttpClient } from "../http";
 import { getSiiBaseUrl } from "../utils";
 import { buildSignedSeedXml } from "./xml-dsig";
@@ -58,6 +58,14 @@ export function signSeed(
   certPassword: string
 ): string {
   const certData = loadCertFromFile(certPath, certPassword);
+  return buildSignedSeedXml(seed, certData);
+}
+
+/**
+ * Signs the seed XML using pre-loaded certificate data.
+ * Use this when the certificate is already in memory (e.g., loaded from base64).
+ */
+export function signSeedFromCertData(seed: string, certData: CertificateData): string {
   return buildSignedSeedXml(seed, certData);
 }
 
