@@ -136,6 +136,23 @@ export async function portalLogin(
   return session;
 }
 
+/**
+ * Logs out of the SII portal, releasing the server-side session.
+ * SII limits concurrent sessions per RUT — always call this when done.
+ */
+export async function portalLogout(session: PortalSession): Promise<void> {
+  const authUrl = getPortalAuthUrl();
+  try {
+    await session.httpClient.get(
+      `${authUrl}/cgi_AUT2000/CAutInwor498.cgi?https://www.sii.cl`,
+      { validateStatus: () => true },
+    );
+  } catch {
+    // Best-effort logout — ignore network errors
+  }
+  session.isAuthenticated = false;
+}
+
 export async function verifyPortalSession(
   httpClient: SiiHttpClient,
   env: SiiEnv,

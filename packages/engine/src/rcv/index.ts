@@ -207,11 +207,12 @@ function buildDataPayload(
   operacion: string,
   estadoContab: EstadoContab,
   codTipoDoc?: string,
-): Record<string, string> {
+  opts?: { busquedaInicial?: boolean; recaptcha?: boolean },
+): Record<string, string | boolean> {
   const { rutBody, dv } = splitRut(rut);
   const ptributario = `${period.year}${String(period.month).padStart(2, "0")}`;
 
-  const body: Record<string, string> = {
+  const body: Record<string, string | boolean> = {
     rutEmisor: rutBody,
     dvEmisor: dv,
     ptributario,
@@ -221,6 +222,18 @@ function buildDataPayload(
 
   if (codTipoDoc) {
     body.codTipoDoc = codTipoDoc;
+  }
+
+  if (opts?.busquedaInicial) {
+    body.busquedaInicial = true;
+  }
+
+  // Detail + export endpoints require recaptcha fields.
+  // The Angular SPA sends the literal string "t-o-k-e-n-web" as a browser bypass.
+  // The accionRecaptcha value identifies the operation (RCV_DETC = compra, RCV_DETV = venta).
+  if (opts?.recaptcha) {
+    body.tokenRecaptcha = "t-o-k-e-n-web";
+    body.accionRecaptcha = operacion === "COMPRA" ? "RCV_DETC" : "RCV_DETV";
   }
 
   return body;
@@ -240,6 +253,8 @@ export async function fetchRcvResumen(
     params.period,
     operacion,
     params.estadoContab ?? ESTADO_CONTAB.REGISTRO,
+    undefined,
+    { busquedaInicial: true },
   );
 
   const body = wrapRequest(token, `${NAMESPACE_FACADE}/getResumen`, data);
@@ -272,6 +287,7 @@ export async function fetchRcvDetalle(
     operacion,
     params.estadoContab ?? ESTADO_CONTAB.REGISTRO,
     params.documentType,
+    { recaptcha: true },
   );
 
   const body = wrapRequest(token, `${NAMESPACE_FACADE}/${method}`, data);
@@ -297,15 +313,16 @@ export async function downloadRcvCsv(
       ? ENDPOINTS.getDetalleCompraExport
       : ENDPOINTS.getDetalleVentaExport;
 
+  const isCompra = params.issueType === "received";
   const data = buildDataPayload(
     params.rut,
     params.period,
     operacion,
     params.estadoContab ?? ESTADO_CONTAB.REGISTRO,
     params.documentType,
+    { recaptcha: true },
   );
 
-  const isCompra = params.issueType === "received";
   const method = isCompra ? "getDetalleCompraExport" : "getDetalleVentaExport";
   const body = wrapRequest(token, `${NAMESPACE_FACADE}/${method}`, data);
   const url = `${baseUrl}${endpoint}`;
