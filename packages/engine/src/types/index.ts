@@ -136,3 +136,47 @@ export const RecepcionResponseSchema = z.object({
   detail: z.string().optional(),
 });
 export type RecepcionResponse = z.infer<typeof RecepcionResponseSchema>;
+
+// --- Invoice Types (RCV - Registro de Compras y Ventas) ---
+
+export const IssueTypeSchema = z.enum(["issued", "received"]);
+export type IssueType = z.infer<typeof IssueTypeSchema>;
+
+export const ConfirmationStatusSchema = z.enum(["REGISTRO", "RECLAMADO", "PENDIENTE"]);
+export type ConfirmationStatus = z.infer<typeof ConfirmationStatusSchema>;
+
+export const InvoiceSchema = z.object({
+  id: z.string().describe("Composite key: ${tipoDte}-${folio}-${counterpartRut}"),
+  number: z.number().describe("Folio number"),
+  issuer: z.object({
+    rut: z.string(),
+    name: z.string(),
+  }),
+  receiver: z.object({
+    rut: z.string(),
+    name: z.string(),
+  }),
+  date: z.string().describe("ISO date YYYY-MM-DD"),
+  netAmount: z.number(),
+  exemptAmount: z.number(),
+  vatAmount: z.number(),
+  totalAmount: z.number(),
+  currency: z.literal("CLP"),
+  taxPeriod: z.object({
+    year: z.number(),
+    month: z.number(),
+  }),
+  documentType: DteTypeSchema,
+  confirmationStatus: ConfirmationStatusSchema,
+  raw: z.record(z.string()).describe("All original CSV fields preserved"),
+});
+export type Invoice = z.infer<typeof InvoiceSchema>;
+
+// --- Portal Configuration ---
+
+export const PortalConfigSchema = z.object({
+  rut: z.string().describe("Full RUT with DV, e.g. 76123456-7"),
+  claveTributaria: z.string().describe("SII portal password"),
+  env: SiiEnvSchema,
+});
+export type PortalConfig = z.infer<typeof PortalConfigSchema>;

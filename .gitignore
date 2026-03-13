@@ -1,5 +1,8 @@
 node_modules/
 dist/
 .env
+.env.local
 *.tgz
 .DS_Store
+certs/
+scripts/debug-output/

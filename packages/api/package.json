@@ -1,0 +1,67 @@
+{
+  "name": "@emisso/sii-api",
+  "version": "0.1.0",
+  "description": "Full SII API layer — routes, services, and database for @emisso/sii",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./next": {
+      "types": "./dist/adapters/next.d.ts",
+      "import": "./dist/adapters/next.mjs",
+      "require": "./dist/adapters/next.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest --run",
+    "lint": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:deploy": "drizzle-kit push",
+    "db:deploy:dry": "drizzle-kit push --dry-run"
+  },
+  "keywords": [
+    "sii",
+    "chile",
+    "tax",
+    "api",
+    "supabase",
+    "drizzle"
+  ],
+  "author": "Emisso <hello@emisso.ai>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/emisso-ai/emisso-sii",
+    "directory": "packages/api"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@emisso/sii": "workspace:*",
+    "drizzle-orm": "^0.38.0",
+    "effect": "^3.0.0",
+    "postgres": "^3.4.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.2.0",
+    "@types/node": "^22.0.0",
+    "drizzle-kit": "^0.30.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}
