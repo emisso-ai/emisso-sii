@@ -36,6 +36,8 @@ export interface SiiRouterConfig {
   encrypt?: (plaintext: string) => string;
   /** Decrypt sensitive fields when reading from database */
   decrypt?: (ciphertext: string) => string;
+  /** Connect to a remote browser (e.g., Browserbase) for portal login */
+  connectBrowser?: () => Promise<import("playwright-core").Browser>;
 }
 
 export function createSiiRouter(config: SiiRouterConfig) {
@@ -59,6 +61,7 @@ export function createSiiRouter(config: SiiRouterConfig) {
     credentialRepo,
     tokenCacheRepo,
     decrypt: config.decrypt,
+    connectBrowser: config.connectBrowser,
   });
   const invoiceService = createInvoiceService({
     invoiceRepo,

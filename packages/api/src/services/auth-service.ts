@@ -7,6 +7,7 @@ import {
   portalLogin,
   type SiiToken,
   type PortalSession,
+  type PortalLoginOptions,
   type SiiEnv,
 } from "@emisso/sii";
 import type { CredentialRepo } from "../repos/credential-repo.js";
@@ -38,6 +39,7 @@ export function createAuthService(deps: {
   credentialRepo: CredentialRepo;
   tokenCacheRepo: TokenCacheRepo;
   decrypt?: (ciphertext: string) => string;
+  connectBrowser?: PortalLoginOptions["connectBrowser"];
 }) {
   const { credentialRepo, tokenCacheRepo } = deps;
   const dec = (v: string) => (deps.decrypt ? deps.decrypt(v) : v);
@@ -103,11 +105,10 @@ export function createAuthService(deps: {
         // Login to portal (decrypt credentials before use)
         const session = yield* Effect.tryPromise({
           try: () =>
-            portalLogin({
-              rut: cred.portalRut!,
-              claveTributaria: dec(cred.portalPassword!),
-              env,
-            }),
+            portalLogin(
+              { rut: cred.portalRut!, claveTributaria: dec(cred.portalPassword!), env },
+              { connectBrowser: deps.connectBrowser },
+            ),
           catch: (e) =>
             SiiAuthError.make(`Portal login failed: ${toMessage(e)}`, e),
         });
@@ -145,11 +146,10 @@ export function createAuthService(deps: {
         const portalTest = cred.portalRut && cred.portalPassword
           ? Effect.tryPromise({
               try: () =>
-                portalLogin({
-                  rut: cred.portalRut!,
-                  claveTributaria: dec(cred.portalPassword!),
-                  env,
-                }).then(() => true),
+                portalLogin(
+                  { rut: cred.portalRut!, claveTributaria: dec(cred.portalPassword!), env },
+                  { connectBrowser: deps.connectBrowser },
+                ).then(() => true),
               catch: (e) => toMessage(e),
             }).pipe(Effect.catchAll((msg) => {
               errors.push(`Portal: ${msg}`);
