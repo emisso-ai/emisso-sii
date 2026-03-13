@@ -41,6 +41,10 @@ export interface SiiRouterConfig {
 }
 
 export function createSiiRouter(config: SiiRouterConfig) {
+  if (!!config.encrypt !== !!config.decrypt) {
+    throw new Error("SiiRouterConfig: encrypt and decrypt must be provided together");
+  }
+
   const sql = postgres(config.databaseUrl);
   const db: PostgresJsDatabase = drizzle(sql);
 

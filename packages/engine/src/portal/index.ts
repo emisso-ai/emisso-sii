@@ -71,9 +71,22 @@ export async function portalLogin(
   // This is SII's actual format — the raw URL IS the query string intentionally.
   const loginUrl = `${authUrl}/AUT2000/InicioAutenticacion/IngresoRutClave.html?${referencia}`;
 
-  const browser = options?.connectBrowser
-    ? await options.connectBrowser()
-    : await (await import("playwright")).chromium.launch({ headless: options?.headless ?? true });
+  const isOwned = !options?.connectBrowser;
+  let browser: Browser;
+  if (options?.connectBrowser) {
+    browser = await options.connectBrowser();
+  } else {
+    let pw;
+    try {
+      pw = await import("playwright");
+    } catch {
+      throw new Error(
+        "playwright is required for local browser login. " +
+        "Install it (npm add playwright) or provide connectBrowser for remote browser support."
+      );
+    }
+    browser = await pw.chromium.launch({ headless: options?.headless ?? true });
+  }
 
   try {
     // Reuse pre-existing context/page (Browserbase creates these) or create new ones
@@ -119,7 +132,7 @@ export async function portalLogin(
 
     return session;
   } finally {
-    await browser.close();
+    if (isOwned) await browser.close();
   }
 }
 
