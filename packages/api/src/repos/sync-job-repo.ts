@@ -4,6 +4,7 @@ import type { PgDatabase } from "drizzle-orm/pg-core";
 import type { IssueType } from "@emisso/sii";
 import { syncJobs, type SyncJob, type NewSyncJob } from "../db/schema/index.js";
 import { DbError, NotFoundError } from "../core/effect/app-error.js";
+import { queryOneOrFail } from "../core/effect/repo-helpers.js";
 
 export function createSyncJobRepo(db: PgDatabase<any>) {
   return {
@@ -22,20 +23,16 @@ export function createSyncJobRepo(db: PgDatabase<any>) {
     },
 
     getById(id: string): Effect.Effect<SyncJob, DbError | NotFoundError> {
-      return Effect.tryPromise({
-        try: () =>
+      return queryOneOrFail(
+        "syncJob.getById",
+        "SyncJob",
+        id,
+        () =>
           db
             .select()
             .from(syncJobs)
             .where(eq(syncJobs.id, id))
             .then((rows) => rows[0]),
-        catch: (e) => DbError.make("syncJob.getById", e),
-      }).pipe(
-        Effect.flatMap((row) =>
-          row
-            ? Effect.succeed(row)
-            : Effect.fail(NotFoundError.make("SyncJob", id)),
-        ),
       );
     },
 
@@ -74,21 +71,17 @@ export function createSyncJobRepo(db: PgDatabase<any>) {
       id: string,
       data: Partial<Pick<SyncJob, "status" | "startedAt" | "completedAt" | "recordsFetched" | "errorMessage">>,
     ): Effect.Effect<SyncJob, DbError | NotFoundError> {
-      return Effect.tryPromise({
-        try: () =>
+      return queryOneOrFail(
+        "syncJob.update",
+        "SyncJob",
+        id,
+        () =>
           db
             .update(syncJobs)
             .set(data)
             .where(eq(syncJobs.id, id))
             .returning()
             .then((rows) => rows[0]),
-        catch: (e) => DbError.make("syncJob.update", e),
-      }).pipe(
-        Effect.flatMap((row) =>
-          row
-            ? Effect.succeed(row)
-            : Effect.fail(NotFoundError.make("SyncJob", id)),
-        ),
       );
     },
   };

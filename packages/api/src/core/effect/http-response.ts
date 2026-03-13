@@ -3,6 +3,7 @@
  * No dependency on Next.js or any framework.
  */
 
+import { Effect } from "effect";
 import type { AppError } from "./app-error.js";
 import { isAppError, serializeAppError } from "./app-error.js";
 
@@ -10,7 +11,7 @@ import { isAppError, serializeAppError } from "./app-error.js";
 // STATUS CODE MAPPING
 // ============================================================================
 
-const STATUS_MAP: Record<AppError["_type"], number> = {
+const STATUS_MAP: Record<AppError["_tag"], number> = {
   ValidationError: 400,
   ForbiddenError: 403,
   NotFoundError: 404,
@@ -24,7 +25,7 @@ const STATUS_MAP: Record<AppError["_type"], number> = {
 // ============================================================================
 
 export function toErrorResponse(error: AppError): Response {
-  const status = STATUS_MAP[error._type] ?? 500;
+  const status = STATUS_MAP[error._tag] ?? 500;
   const body = serializeAppError(error);
   return Response.json({ error: body }, { status });
 }
@@ -34,9 +35,10 @@ export function toErrorResponse(error: AppError): Response {
  */
 function extractAppError(error: unknown): AppError | null {
   if (isAppError(error)) return error;
-  const cause = (error as any)?.cause ?? (error as any)?.[Symbol.for("effect/Runtime/FiberFailure/Cause")];
+  // Handle Effect's FiberFailure — access cause.error
+  const cause = (error as any)?.cause;
   if (cause) {
-    const inner = cause?.error ?? (cause?._tag === "Fail" ? cause?.error : undefined);
+    const inner = cause?.error;
     if (isAppError(inner)) return inner;
   }
   return null;
@@ -49,6 +51,25 @@ export function toErrorResponseFromUnknown(error: unknown): Response {
   return Response.json(
     { error: { _type: "InternalError", message: "Internal server error" } },
     { status: 500 },
+  );
+}
+
+// ============================================================================
+// EFFECT HANDLER
+// ============================================================================
+
+/**
+ * Run an Effect at the handler boundary, converting errors to HTTP responses.
+ */
+export function handleEffect<T>(
+  effect: Effect.Effect<T, AppError>,
+  toResponse: (data: T) => Response = jsonResponse,
+): Promise<Response> {
+  return Effect.runPromise(
+    effect.pipe(
+      Effect.map(toResponse),
+      Effect.catchAll((err) => Effect.succeed(toErrorResponse(err))),
+    ),
   );
 }
 

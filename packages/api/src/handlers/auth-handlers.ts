@@ -6,9 +6,8 @@ import type { AuthService } from "../services/auth-service.js";
 import { SaveCredentialsSchema } from "../validation/schemas.js";
 import { ValidationError } from "../core/effect/app-error.js";
 import {
-  jsonResponse,
   noContentResponse,
-  toErrorResponseFromUnknown,
+  handleEffect,
 } from "../core/effect/http-response.js";
 
 export function createAuthHandlers(deps: {
@@ -17,67 +16,48 @@ export function createAuthHandlers(deps: {
 }) {
   const { credentialService, authService } = deps;
 
-  const saveCredentials: HandlerFn = async (req, ctx) => {
-    try {
-      const body = await req.json();
-      const parsed = SaveCredentialsSchema.safeParse(body);
-      if (!parsed.success) {
-        throw ValidationError.fromZodErrors(
-          "Invalid credentials data",
-          parsed.error.issues,
-        );
-      }
-      const result = await Effect.runPromise(
-        credentialService.save(ctx.tenantId, parsed.data),
-      );
-      return jsonResponse({
-        id: result.id,
-        env: result.env,
-        hasCert: !!result.certBase64,
-        hasPortal: !!result.portalRut,
-        portalRut: result.portalRut,
-        createdAt: result.createdAt,
-        updatedAt: result.updatedAt,
-      });
-    } catch (e) {
-      return toErrorResponseFromUnknown(e);
-    }
+  const saveCredentials: HandlerFn = (req, ctx) =>
+    handleEffect(
+      Effect.gen(function* () {
+        const body = yield* Effect.tryPromise({
+          try: () => req.json(),
+          catch: () => ValidationError.make("Invalid JSON body"),
+        });
+        const parsed = SaveCredentialsSchema.safeParse(body);
+        if (!parsed.success) {
+          return yield* Effect.fail(
+            ValidationError.fromZodErrors("Invalid credentials data", parsed.error.issues),
+          );
+        }
+        const result = yield* credentialService.save(ctx.tenantId, parsed.data);
+        return {
+          id: result.id,
+          env: result.env,
+          hasCert: !!result.certBase64,
+          hasPortal: !!result.portalRut,
+          portalRut: result.portalRut,
+          createdAt: result.createdAt,
+          updatedAt: result.updatedAt,
+        };
+      }),
+    );
+
+  const getStatus: HandlerFn = (req, ctx) => {
+    const env = resolveEnv(req);
+    return handleEffect(credentialService.getStatus(ctx.tenantId, env));
   };
 
-  const getStatus: HandlerFn = async (req, ctx) => {
-    try {
-      const env = resolveEnv(req);
-      const result = await Effect.runPromise(
-        credentialService.getStatus(ctx.tenantId, env),
-      );
-      return jsonResponse(result);
-    } catch (e) {
-      return toErrorResponseFromUnknown(e);
-    }
+  const testConnection: HandlerFn = (req, ctx) => {
+    const env = resolveEnv(req);
+    return handleEffect(authService.testConnection(ctx.tenantId, env));
   };
 
-  const testConnection: HandlerFn = async (req, ctx) => {
-    try {
-      const env = resolveEnv(req);
-      const result = await Effect.runPromise(
-        authService.testConnection(ctx.tenantId, env),
-      );
-      return jsonResponse(result);
-    } catch (e) {
-      return toErrorResponseFromUnknown(e);
-    }
-  };
-
-  const disconnect: HandlerFn = async (req, ctx) => {
-    try {
-      const env = resolveEnv(req);
-      await Effect.runPromise(
-        credentialService.disconnect(ctx.tenantId, env),
-      );
-      return noContentResponse();
-    } catch (e) {
-      return toErrorResponseFromUnknown(e);
-    }
+  const disconnect: HandlerFn = (req, ctx) => {
+    const env = resolveEnv(req);
+    return handleEffect(
+      credentialService.disconnect(ctx.tenantId, env).pipe(Effect.map(() => null)),
+      () => noContentResponse(),
+    );
   };
 
   return {

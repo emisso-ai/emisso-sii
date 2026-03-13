@@ -4,6 +4,7 @@ import type { PgDatabase } from "drizzle-orm/pg-core";
 import type { SiiEnv } from "@emisso/sii";
 import { credentials, type Credential, type NewCredential } from "../db/schema/index.js";
 import { DbError, NotFoundError } from "../core/effect/app-error.js";
+import { queryOneOrFail } from "../core/effect/repo-helpers.js";
 
 export function createCredentialRepo(db: PgDatabase<any>) {
   return {
@@ -11,8 +12,11 @@ export function createCredentialRepo(db: PgDatabase<any>) {
       tenantId: string,
       env: SiiEnv,
     ): Effect.Effect<Credential, DbError | NotFoundError> {
-      return Effect.tryPromise({
-        try: () =>
+      return queryOneOrFail(
+        "credential.getByTenantAndEnv",
+        "Credential",
+        `${tenantId}/${env}`,
+        () =>
           db
             .select()
             .from(credentials)
@@ -23,13 +27,6 @@ export function createCredentialRepo(db: PgDatabase<any>) {
               ),
             )
             .then((rows) => rows[0]),
-        catch: (e) => DbError.make("credential.getByTenantAndEnv", e),
-      }).pipe(
-        Effect.flatMap((row) =>
-          row
-            ? Effect.succeed(row)
-            : Effect.fail(NotFoundError.make("Credential", `${tenantId}/${env}`)),
-        ),
       );
     },
 

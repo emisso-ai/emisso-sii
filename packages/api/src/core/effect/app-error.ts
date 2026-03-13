@@ -1,6 +1,6 @@
 /**
  * Application errors for Effect-based SII API logic.
- * Follows the Emisso pattern using Data.TaggedError with `_type` discriminator.
+ * Uses Data.TaggedError which automatically sets `_tag` as the discriminator.
  */
 
 import { Data } from "effect";
@@ -10,14 +10,12 @@ import { Data } from "effect";
 // ============================================================================
 
 export class NotFoundError extends Data.TaggedError("NotFoundError")<{
-  readonly _type: "NotFoundError";
   readonly message: string;
   readonly entity?: string;
   readonly entityId?: string;
 }> {
   static make(entity: string, entityId?: string): NotFoundError {
     return new NotFoundError({
-      _type: "NotFoundError",
       message: `${entity} not found${entityId ? `: ${entityId}` : ""}`,
       entity,
       entityId,
@@ -26,7 +24,6 @@ export class NotFoundError extends Data.TaggedError("NotFoundError")<{
 }
 
 export class ValidationError extends Data.TaggedError("ValidationError")<{
-  readonly _type: "ValidationError";
   readonly message: string;
   readonly field?: string;
   readonly details?: Record<string, unknown>;
@@ -38,7 +35,6 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
     details?: Record<string, unknown>,
   ): ValidationError {
     return new ValidationError({
-      _type: "ValidationError",
       message,
       field,
       details,
@@ -50,7 +46,6 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
     issues: Array<{ path: (string | number)[]; message: string }>,
   ): ValidationError {
     return new ValidationError({
-      _type: "ValidationError",
       message,
       fieldErrors: issues.map((i) => ({
         path: i.path.join("."),
@@ -61,7 +56,6 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
 }
 
 export class ForbiddenError extends Data.TaggedError("ForbiddenError")<{
-  readonly _type: "ForbiddenError";
   readonly message: string;
   readonly requiredPermission?: string;
 }> {
@@ -70,7 +64,6 @@ export class ForbiddenError extends Data.TaggedError("ForbiddenError")<{
     requiredPermission?: string,
   ): ForbiddenError {
     return new ForbiddenError({
-      _type: "ForbiddenError",
       message,
       requiredPermission,
     });
@@ -78,7 +71,6 @@ export class ForbiddenError extends Data.TaggedError("ForbiddenError")<{
 }
 
 export class DbError extends Data.TaggedError("DbError")<{
-  readonly _type: "DbError";
   readonly message: string;
   readonly operation?: string;
   readonly cause?: unknown;
@@ -87,7 +79,6 @@ export class DbError extends Data.TaggedError("DbError")<{
     const message =
       cause instanceof Error ? cause.message : "Database operation failed";
     return new DbError({
-      _type: "DbError",
       message,
       operation,
       cause,
@@ -96,7 +87,6 @@ export class DbError extends Data.TaggedError("DbError")<{
 }
 
 export class ConflictError extends Data.TaggedError("ConflictError")<{
-  readonly _type: "ConflictError";
   readonly message: string;
   readonly resource?: string;
   readonly conflictingValue?: string;
@@ -107,7 +97,6 @@ export class ConflictError extends Data.TaggedError("ConflictError")<{
     conflictingValue?: string,
   ): ConflictError {
     return new ConflictError({
-      _type: "ConflictError",
       message,
       resource,
       conflictingValue,
@@ -116,13 +105,11 @@ export class ConflictError extends Data.TaggedError("ConflictError")<{
 }
 
 export class SiiAuthError extends Data.TaggedError("SiiAuthError")<{
-  readonly _type: "SiiAuthError";
   readonly message: string;
   readonly cause?: unknown;
 }> {
   static make(message: string, cause?: unknown): SiiAuthError {
     return new SiiAuthError({
-      _type: "SiiAuthError",
       message,
       cause,
     });
@@ -166,11 +153,11 @@ export function serializeAppError(error: AppError): {
   [key: string]: unknown;
 } {
   const result: Record<string, unknown> = {
-    _type: error._type,
+    _type: error._tag,
     message: error.message,
   };
 
-  switch (error._type) {
+  switch (error._tag) {
     case "NotFoundError":
       if (error.entity) result.entity = error.entity;
       if (error.entityId) result.entityId = error.entityId;
@@ -192,6 +179,12 @@ export function serializeAppError(error: AppError): {
       if (error.conflictingValue)
         result.conflictingValue = error.conflictingValue;
       break;
+    case "SiiAuthError":
+      break;
+    default: {
+      const _exhaustive: never = error;
+      return result as any;
+    }
   }
 
   return result as { _type: string; message: string; [key: string]: unknown };

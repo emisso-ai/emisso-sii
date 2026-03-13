@@ -17,10 +17,12 @@ export {
 export {
   toErrorResponse,
   toErrorResponseFromUnknown,
+  handleEffect,
   jsonResponse,
   createdResponse,
   noContentResponse,
 } from "./core/effect/http-response.js";
+export { queryOneOrFail } from "./core/effect/repo-helpers.js";
 export { invoiceToRow, rowToInvoice } from "./core/bridge.js";
 
 // ── Validation ──
