@@ -1,0 +1,37 @@
+# @emisso/sii
+
+> TypeScript SDK for Chile's SII (Servicio de Impuestos Internos) — electronic invoicing, certificate auth, and invoice listing.
+
+- Repo: https://github.com/emisso-ai/emisso-sii
+- npm: https://www.npmjs.com/package/@emisso/sii
+- License: MIT
+
+## Install
+
+npm install @emisso/sii
+
+## Docs
+
+- [README](https://github.com/emisso-ai/emisso-sii/blob/main/README.md)
+- [AGENTS.md](https://github.com/emisso-ai/emisso-sii/blob/main/AGENTS.md)
+
+## Key Features
+
+- Authenticate with SII using .p12 digital certificates (SOAP token exchange)
+- Build, sign, and submit electronic documents (DTE) — all 10 SII types
+- List received and issued invoices via RCV (Registro de Compras y Ventas)
+- Download RCV data as CSV
+- Folio management (CAF files)
+- Self-hosted REST API with certificate vault and multi-tenant support (@emisso/sii-api)
+
+## API
+
+- `loadCertFromFile(path, password)` — Load .p12/.pfx certificate
+- `authenticate(cert, options)` — SOAP auth, returns SII token
+- `buildDteXml(document)` — Build DTE XML from structured input
+- `signDte(xml, cert)` — Sign DTE XML with certificate
+- `uploadDte(xml, token, options)` — Submit signed DTE to SII
+- `listInvoices(options)` — Fetch RCV invoice listing
+- `fetchRcvResumen(options)` — RCV summary by period
+- `downloadRcvCsv(options)` — Download RCV as CSV
+- `portalLogin(rut, password)` — Web portal session login

@@ -37,7 +37,13 @@
     "tax",
     "api",
     "supabase",
-    "drizzle"
+    "drizzle",
+    "self-hosted",
+    "multi-tenant",
+    "effect-ts",
+    "next-js",
+    "rest-api",
+    "electronic-invoicing"
   ],
   "author": "Emisso <hello@emisso.ai>",
   "license": "MIT",

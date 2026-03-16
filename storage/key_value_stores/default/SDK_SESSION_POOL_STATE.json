@@ -1,0 +1,67 @@
+{
+  "usableSessionsCount": 2,
+  "retiredSessionsCount": 0,
+  "sessions": [
+    {
+      "id": "session_HdakvYqyeF",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.1",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-03-13T16:08:35.461Z",
+      "createdAt": "2026-03-13T15:18:35.461Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_Zb8Vt9sVKf",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.1",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": [
+          {
+            "key": "TS0161cd2b",
+            "value": "016d61e7ae4b49cae251c7826b4f2d9301f1e4550ee9b470e13ba8183269829e1d8af2cd5777d7f4f3f8e6068d6046f6efbcb87932",
+            "expires": "2026-03-13T16:08:36.585Z",
+            "domain": "zeusr.sii.cl",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-03-13T15:18:36.587Z",
+            "lastAccessed": "2026-03-13T15:18:36.587Z"
+          },
+          {
+            "key": "TSdf5d7d41027",
+            "value": "081526045eab2000bbc3d2ff08a1d1b62eb84b85519eb04f4cbc95cee67349cd82d0022a863a40f808116abd68113000dbce9c3354a33a20d2fce783a497a3d2c84d3f94ca0db43e21de6e64a372c563f026f068382541ad7dd9595bcb207cf6",
+            "expires": "2026-03-13T16:08:36.585Z",
+            "domain": "zeusr.sii.cl",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-03-13T15:18:36.587Z",
+            "lastAccessed": "2026-03-13T15:18:36.587Z"
+          }
+        ]
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-03-13T16:08:35.462Z",
+      "createdAt": "2026-03-13T15:18:35.462Z",
+      "usageCount": 1,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    }
+  ]
+}

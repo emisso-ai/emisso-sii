@@ -1,0 +1,9 @@
+{
+	"id": "udDWtlE199Qv5au",
+	"json": "{\"id\":\"udDWtlE199Qv5au\",\"url\":\"https://zeusr.sii.cl/AUT2000/InicioAutenticacion/IngresoRutClave.html?https://misii.sii.cl/cgi_misii/siihome.cgi\",\"loadedUrl\":\"https://zeusr.sii.cl/AUT2000/InicioAutenticacion/IngresoRutClave.html?https://misii.sii.cl/cgi_misii/siihome.cgi\",\"uniqueKey\":\"https://zeusr.sii.cl/AUT2000/InicioAutenticacion/IngresoRutClave.html?https%3A%2F%2Fmisii.sii.cl%2Fcgi_misii%2Fsiihome.cgi=\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"state\":4}},\"handledAt\":\"2026-03-13T15:18:40.787Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://zeusr.sii.cl/AUT2000/InicioAutenticacion/IngresoRutClave.html?https%3A%2F%2Fmisii.sii.cl%2Fcgi_misii%2Fsiihome.cgi=",
+	"url": "https://zeusr.sii.cl/AUT2000/InicioAutenticacion/IngresoRutClave.html?https://misii.sii.cl/cgi_misii/siihome.cgi"
+}
