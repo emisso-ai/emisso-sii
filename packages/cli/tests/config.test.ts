@@ -1,12 +1,10 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, afterEach, vi } from "vitest";
 import { Option } from "effect";
 import { resolveCertConfig, resolvePortalConfig } from "../src/config/resolve";
 
 describe("resolveCertConfig", () => {
-  const originalEnv = { ...process.env };
-
   afterEach(() => {
-    process.env = { ...originalEnv };
+    vi.unstubAllEnvs();
   });
 
   it("resolves from CLI flags", () => {
@@ -22,9 +20,9 @@ describe("resolveCertConfig", () => {
   });
 
   it("falls back to env vars when flags are None", () => {
-    process.env.SII_CERT_PATH = "/env/cert.p12";
-    process.env.SII_CERT_PASSWORD = "env-secret";
-    process.env.SII_ENV = "production";
+    vi.stubEnv("SII_CERT_PATH", "/env/cert.p12");
+    vi.stubEnv("SII_CERT_PASSWORD", "env-secret");
+    vi.stubEnv("SII_ENV", "production");
 
     const config = resolveCertConfig({
       cert: Option.none(),
@@ -38,8 +36,8 @@ describe("resolveCertConfig", () => {
   });
 
   it("CLI flags take precedence over env vars", () => {
-    process.env.SII_CERT_PATH = "/env/cert.p12";
-    process.env.SII_CERT_PASSWORD = "env-secret";
+    vi.stubEnv("SII_CERT_PATH", "/env/cert.p12");
+    vi.stubEnv("SII_CERT_PASSWORD", "env-secret");
 
     const config = resolveCertConfig({
       cert: Option.some("/flag/cert.p12"),
@@ -94,13 +92,47 @@ describe("resolveCertConfig", () => {
       }),
     ).toThrow("Invalid environment: staging");
   });
+
+  it("trims whitespace from flag values", () => {
+    const config = resolveCertConfig({
+      cert: Option.some("  /path/cert.p12  "),
+      password: Option.some("  secret  "),
+      env: Option.none(),
+    });
+
+    expect(config.certPath).toBe("/path/cert.p12");
+    expect(config.certPassword).toBe("secret");
+  });
+
+  it("rejects whitespace-only flag values and falls back to env", () => {
+    vi.stubEnv("SII_CERT_PATH", "/env/cert.p12");
+
+    const config = resolveCertConfig({
+      cert: Option.some("   "),
+      password: Option.some("secret"),
+      env: Option.none(),
+    });
+
+    expect(config.certPath).toBe("/env/cert.p12");
+  });
+
+  it("rejects whitespace-only env values", () => {
+    vi.stubEnv("SII_CERT_PATH", "   ");
+    delete process.env.SII_CERT_PASSWORD;
+
+    expect(() =>
+      resolveCertConfig({
+        cert: Option.none(),
+        password: Option.some("secret"),
+        env: Option.none(),
+      }),
+    ).toThrow("Missing required option: --cert");
+  });
 });
 
 describe("resolvePortalConfig", () => {
-  const originalEnv = { ...process.env };
-
   afterEach(() => {
-    process.env = { ...originalEnv };
+    vi.unstubAllEnvs();
   });
 
   it("resolves from CLI flags", () => {
@@ -118,8 +150,8 @@ describe("resolvePortalConfig", () => {
   });
 
   it("falls back to env vars", () => {
-    process.env.SII_RUT = "76123456-7";
-    process.env.SII_CLAVE = "envpass";
+    vi.stubEnv("SII_RUT", "76123456-7");
+    vi.stubEnv("SII_CLAVE", "envpass");
 
     const config = resolvePortalConfig({
       rut: Option.none(),

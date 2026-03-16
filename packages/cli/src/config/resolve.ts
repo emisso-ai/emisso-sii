@@ -24,10 +24,10 @@ function getOrEnvOrThrow(
   envVar: string,
   fieldName: string,
 ): string {
-  const flagValue = O.getOrUndefined(flag);
-  if (flagValue !== undefined) return flagValue;
+  const flagValue = O.getOrUndefined(flag)?.trim();
+  if (flagValue !== undefined && flagValue !== "") return flagValue;
 
-  const envValue = process.env[envVar];
+  const envValue = process.env[envVar]?.trim();
   if (envValue !== undefined && envValue !== "") return envValue;
 
   throw new CliError({

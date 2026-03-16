@@ -5,6 +5,12 @@
 import { writeFileSync } from "node:fs";
 import { Command, Options } from "@effect/cli";
 import { Effect, Option as O } from "effect";
+import {
+  portalLogin,
+  portalLogout,
+  downloadRcvCsv,
+  DteTypeSchema,
+} from "@emisso/sii";
 import type { IssueType, DteType, ListInvoicesParams } from "@emisso/sii";
 import {
   OutputRenderer,
@@ -15,21 +21,8 @@ import {
   outputFileOption,
 } from "@emisso/cli-core";
 import { resolvePortalConfig, type PortalFlags, type CertFlags } from "../../config/resolve.js";
-
-const rutOption = Options.text("rut").pipe(
-  Options.optional,
-  Options.withDescription("Company RUT for portal login"),
-);
-
-const claveOption = Options.text("clave").pipe(
-  Options.optional,
-  Options.withDescription("Clave tributaria (portal password)"),
-);
-
-const envOption = Options.text("env").pipe(
-  Options.optional,
-  Options.withDescription("SII environment: certification (default) or production"),
-);
+import { rutOption, claveOption, envOption } from "../../options.js";
+import { parsePeriod, effectifyConfig } from "../../utils.js";
 
 const periodOption = Options.text("period").pipe(
   Options.withDescription("Tax period in YYYY-MM format"),
@@ -63,18 +56,6 @@ const options = {
   json: jsonFlag,
 };
 
-function parsePeriod(period: string): { year: number; month: number } {
-  const match = period.match(/^(\d{4})-(\d{2})$/);
-  if (!match) {
-    throw new CliError({
-      kind: "bad-args",
-      message: `Invalid period format: ${period}`,
-      detail: "Expected YYYY-MM (e.g. 2024-03)",
-    });
-  }
-  return { year: parseInt(match[1], 10), month: parseInt(match[2], 10) };
-}
-
 export const invoicesDownloadCommand = Command.make(
   "download",
   options,
@@ -91,35 +72,24 @@ export const invoicesDownloadCommand = Command.make(
         password: O.none(),
       };
 
-      let portalConfig: ReturnType<typeof resolvePortalConfig>;
-      try {
-        portalConfig = resolvePortalConfig(flags);
-      } catch (e) {
-        if (e instanceof CliError) return yield* Effect.fail(e);
-        throw e;
-      }
+      const portalConfig = yield* effectifyConfig(() => resolvePortalConfig(flags));
+      const periodParsed = yield* effectifyConfig(() => parsePeriod(period));
 
-      let periodParsed: { year: number; month: number };
-      try {
-        periodParsed = parsePeriod(period);
-      } catch (e) {
-        if (e instanceof CliError) return yield* Effect.fail(e);
-        throw e;
+      const docTypeValue = O.getOrUndefined(docType);
+      if (docTypeValue !== undefined) {
+        const parsed = DteTypeSchema.safeParse(docTypeValue);
+        if (!parsed.success) {
+          return yield* Effect.fail(new CliError({
+            kind: "bad-args",
+            message: `Invalid document type: ${docTypeValue}`,
+            detail: "Valid types: 33, 34, 39, 41, 43, 46, 52, 56, 61, 110, 112",
+          }));
+        }
       }
-
-      const sii = yield* Effect.tryPromise({
-        try: () => import("@emisso/sii"),
-        catch: (error) =>
-          new CliError({
-            kind: "general",
-            message: "Failed to load @emisso/sii",
-            detail: error instanceof Error ? error.message : String(error),
-          }),
-      });
 
       const session = yield* Effect.tryPromise({
         try: () =>
-          sii.portalLogin(
+          portalLogin(
             { rut: portalConfig.rut, claveTributaria: portalConfig.claveTributaria, env: portalConfig.env },
             { headless },
           ),
@@ -131,30 +101,27 @@ export const invoicesDownloadCommand = Command.make(
           }),
       });
 
-      const docTypeValue = O.getOrUndefined(docType) as DteType | undefined;
-
       const params: ListInvoicesParams = {
         rut: portalConfig.rut,
         issueType: type as IssueType,
         period: periodParsed,
-        ...(docTypeValue ? { documentType: docTypeValue } : {}),
+        ...(docTypeValue ? { documentType: docTypeValue as DteType } : {}),
       };
 
       const csv = yield* Effect.tryPromise({
-        try: () => sii.downloadRcvCsv(session, params),
+        try: () => downloadRcvCsv(session, params),
         catch: (error) =>
           new CliError({
             kind: "general",
             message: "Failed to download CSV",
             detail: error instanceof Error ? error.message : String(error),
           }),
-      });
-
-      // Best-effort logout
-      yield* Effect.tryPromise({
-        try: () => sii.portalLogout(session),
-        catch: () => new Error("logout failed"),
-      }).pipe(Effect.catchAll(() => Effect.void));
+      }).pipe(
+        Effect.ensuring(
+          Effect.tryPromise({ try: () => portalLogout(session), catch: () => {} })
+            .pipe(Effect.catchAll(() => Effect.void))
+        )
+      );
 
       const outputPath = O.getOrUndefined(output) as string | undefined;
 

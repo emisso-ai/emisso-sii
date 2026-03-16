@@ -2,8 +2,8 @@
  * sii cert info — show certificate subject, issuer, expiry
  */
 
-import { Command, Options } from "@effect/cli";
-import { Effect } from "effect";
+import { Command } from "@effect/cli";
+import { Effect, Option } from "effect";
 import { loadCertFromFile } from "@emisso/sii";
 import {
   OutputRenderer,
@@ -14,16 +14,8 @@ import {
 } from "@emisso/cli-core";
 import { certColumns } from "../../formatters/sii-table.js";
 import { resolveCertConfig, type CertFlags } from "../../config/resolve.js";
-
-const certOption = Options.text("cert").pipe(
-  Options.optional,
-  Options.withDescription("Path to .p12 certificate file"),
-);
-
-const passwordOption = Options.text("password").pipe(
-  Options.optional,
-  Options.withDescription("Certificate password"),
-);
+import { certOption, passwordOption } from "../../options.js";
+import { effectifyConfig } from "../../utils.js";
 
 const options = {
   cert: certOption,
@@ -43,16 +35,10 @@ export const certInfoCommand = Command.make(
       const flags: CertFlags = {
         cert,
         password,
-        env: { _tag: "None" } as any,
+        env: Option.none(),
       };
 
-      let config: ReturnType<typeof resolveCertConfig>;
-      try {
-        config = resolveCertConfig(flags);
-      } catch (e) {
-        if (e instanceof CliError) return yield* Effect.fail(e);
-        throw e;
-      }
+      const config = yield* effectifyConfig(() => resolveCertConfig(flags));
 
       const certData = yield* Effect.try({
         try: () => loadCertFromFile(config.certPath, config.certPassword),
