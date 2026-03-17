@@ -16,6 +16,7 @@ TypeScript SDK for Chile's SII (Servicio de Impuestos Internos) — electronic i
 |---------|-------------|---------|
 | `@emisso/sii` | Core engine — auth, DTE, certificates (zero DB) | `npm install @emisso/sii` |
 | `@emisso/sii-api` | Full-stack API layer (Drizzle + Effect) | `npm install @emisso/sii-api` |
+| `@emisso/sii-cli` | Command-line interface | `npm install -g @emisso/sii-cli` |
 
 ## Quick Start — Engine
 
@@ -209,6 +210,47 @@ GET    /submissions/:trackId      Submission detail
 | `SII_CERT_PASSWORD` | Certificate password | — |
 | `SII_ENV` | `certification` or `production` | `certification` |
 | `EMISSO_DATABASE_URL` | PostgreSQL connection (API only) | — |
+
+## CLI
+
+```bash
+npm install -g @emisso/sii-cli
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `sii auth login --cert cert.p12 --password ****` | Authenticate with SII, print token |
+| `sii auth test --cert cert.p12 --password ****` | Verify token is still valid |
+| `sii cert info --cert cert.p12 --password ****` | Show certificate subject, issuer, expiry |
+| `sii cert verify --cert cert.p12 --password ****` | Validate .p12 certificate file |
+| `sii invoices list --rut 76123456-7 --clave **** --period 2026-03` | List invoices from SII RCV |
+| `sii invoices download --rut 76123456-7 --clave **** --period 2026-03 -o invoices.csv` | Download RCV as CSV |
+| `sii rut validate 12345678-5` | Validate Chilean RUT |
+| `sii rut format 123456785` | Format RUT with dash |
+| `sii doctor` | Check system health and dependencies |
+
+### Configuration
+
+CLI flags take precedence over environment variables:
+
+| Flag | Environment Variable | Description |
+|------|---------------------|-------------|
+| `--cert` | `SII_CERT_PATH` | Path to .p12 certificate |
+| `--password` | `SII_CERT_PASSWORD` | Certificate password |
+| `--env` | `SII_ENV` | `certification` or `production` |
+| `--rut` | `SII_RUT` | Company RUT (for invoice commands) |
+| `--clave` | `SII_CLAVE` | Clave tributaria (for portal login) |
+
+### Output Formats
+
+All commands support `--format table|csv|json` and `--json` shorthand. Defaults to table for TTY, CSV for pipes.
+
+```bash
+sii invoices list --rut 76123456-7 --clave **** --period 2026-03 --json
+sii cert info --cert cert.p12 --password **** --format csv
+```
 
 ## Development
 
