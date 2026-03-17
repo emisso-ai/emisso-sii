@@ -1,5 +1,11 @@
 # @emisso/sii-api
 
+## 0.1.3
+
+### Patch Changes
+
+- d6d9d00: Fix circular dependency in schema imports that caused "Cannot read properties of undefined (reading 'table')" at build time in Next.js/Turbopack
+
 ## 0.1.2
 
 ### Patch Changes
