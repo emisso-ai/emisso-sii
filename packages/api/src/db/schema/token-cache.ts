@@ -4,7 +4,7 @@ import {
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
-import { siiSchema } from "./index.js";
+import { siiSchema } from "./sii-schema.js";
 import { credentials } from "./credentials.js";
 
 export const tokenCache = siiSchema.table(

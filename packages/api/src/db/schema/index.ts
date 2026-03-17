@@ -3,9 +3,7 @@
  * All tables live in the PostgreSQL `sii` schema.
  */
 
-import { pgSchema } from "drizzle-orm/pg-core";
-
-export const siiSchema = pgSchema("sii");
+export { siiSchema } from "./sii-schema.js";
 
 export { credentials } from "./credentials.js";
 export type { Credential, NewCredential } from "./credentials.js";

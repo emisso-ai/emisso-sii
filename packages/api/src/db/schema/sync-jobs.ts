@@ -5,7 +5,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import type { IssueType } from "@emisso/sii";
-import { siiSchema } from "./index.js";
+import { siiSchema } from "./sii-schema.js";
 
 export type SyncJobStatus = "pending" | "running" | "completed" | "failed";
 

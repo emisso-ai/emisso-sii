@@ -10,7 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import type { DteType, IssueType, ConfirmationStatus } from "@emisso/sii";
-import { siiSchema } from "./index.js";
+import { siiSchema } from "./sii-schema.js";
 
 export const invoices = siiSchema.table(
   "invoices",
