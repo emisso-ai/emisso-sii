@@ -1,27 +1,26 @@
-# @emisso/sii
+# @emisso/sii — Complete Documentation
 
-TypeScript SDK for Chile's SII (Servicio de Impuestos Internos) — electronic invoicing (DTE), certificate authentication, folio management, and invoice listing (RCV).
+> TypeScript SDK for Chile's SII (Servicio de Impuestos Internos) — electronic invoicing (DTE), certificate authentication, folio management, and invoice listing (RCV).
+
+## What This Is
+
+@emisso/sii is an MIT-licensed TypeScript SDK for integrating with Chile's tax authority (SII). It handles electronic document (DTE) creation, signing, and submission; certificate-based authentication; and reading issued/received invoices from the RCV portal. It's the first open-source TypeScript library that covers both DTE emission and portal data reading for Chilean tax compliance.
 
 ## When to Use This
 
-- You need to **issue electronic invoices (DTE)** to Chile's SII from a TypeScript/Node.js backend
-- You want to **list received and issued invoices** (RCV) from SII programmatically
-- You need to **authenticate with .p12 digital certificates** against SII's SOAP services
-- You're building a **multi-tenant invoicing SaaS** and need a ready-made API with certificate vault
-- You want an **open-source alternative** to closed-source Chilean invoicing APIs (Facturapi, Bsale, Nubox)
+- You need to issue electronic invoices (DTE) to Chile's SII from a TypeScript/Node.js backend
+- You want to list received and issued invoices (RCV) from SII programmatically
+- You need to authenticate with .p12 digital certificates against SII's SOAP services
+- You're building a multi-tenant invoicing SaaS and need a ready-made API with certificate vault
+- You want an open-source alternative to closed-source Chilean invoicing APIs (Facturapi, Bsale, Nubox)
 
-## Packages
-
-| Package | Description | Install |
-|---------|-------------|---------|
-| `@emisso/sii` | Core engine — auth, DTE, certificates (zero DB) | `npm install @emisso/sii` |
-| `@emisso/sii-api` | Full-stack API layer (Drizzle + Effect) | `npm install @emisso/sii-api` |
-
-## Quick Start — Engine
+## Install
 
 ```bash
 npm install @emisso/sii
 ```
+
+## Quick Start
 
 ### Authenticate with SII
 
@@ -56,7 +55,7 @@ import { buildDteXml, signDte, loadCertFromFile } from "@emisso/sii";
 const cert = loadCertFromFile("./cert.p12", "password");
 
 const xml = await buildDteXml({
-  tipoDte: "33", // Factura Electrónica
+  tipoDte: "33",
   folio: 1,
   fechaEmision: "2026-03-13",
   emisor: {
@@ -91,61 +90,6 @@ const result = await uploadDte(signedXml, token, { env: "certification" });
 console.log("Track ID:", result.trackId);
 ```
 
-## Quick Start — Self-Hosted API
-
-For teams that need a REST API with certificate vault, DTE audit trail, and multi-tenant.
-
-```bash
-npm install @emisso/sii-api
-```
-
-**1. Set environment variables:**
-
-```bash
-# .env.local
-EMISSO_DATABASE_URL=postgresql://user:pass@localhost:5432/mydb
-```
-
-**2. Run migrations:**
-
-```bash
-npx @emisso/sii-api migrate
-```
-
-**3. Mount in your Next.js app:**
-
-```typescript
-// app/api/sii/[...path]/route.ts
-import { createSiiRouter } from "@emisso/sii-api/next";
-
-export const { GET, POST, PUT, DELETE } = createSiiRouter({
-  databaseUrl: process.env.EMISSO_DATABASE_URL!,
-  basePath: "/api/sii",
-  resolveTenantId: async (req) => {
-    const session = await getSession(req); // your auth
-    return session.tenantId;
-  },
-});
-```
-
-**4. Use the API:**
-
-```bash
-# Upload certificate
-curl -X POST http://localhost:3000/api/sii/certificates \
-  -F "file=@cert.p12" \
-  -F "password=****" \
-  -F "label=Empresa Principal"
-
-# List received invoices
-curl http://localhost:3000/api/sii/rcv/76123456-7/2026-03?type=received
-
-# Create and submit DTE
-curl -X POST http://localhost:3000/api/sii/dte \
-  -H "Content-Type: application/json" \
-  -d '{"type":33,"receptor":{"rut":"12345678-9","razonSocial":"Cliente SA"},"items":[...]}'
-```
-
 ## Supported DTE Types
 
 | Code | Document |
@@ -161,9 +105,9 @@ curl -X POST http://localhost:3000/api/sii/dte \
 | 110 | Factura de Exportación Electrónica |
 | 112 | Nota de Crédito de Exportación Electrónica |
 
-## API Reference
+## Complete API Reference
 
-### Engine Exports (`@emisso/sii`)
+### Engine (`@emisso/sii`)
 
 | Export | Description |
 |--------|-------------|
@@ -177,7 +121,27 @@ curl -X POST http://localhost:3000/api/sii/dte \
 | `downloadRcvCsv(options)` | Download RCV as CSV |
 | `portalLogin(rut, password)` | Web portal session login |
 
-### API Endpoints (`@emisso/sii-api`)
+### Self-Hosted API (`@emisso/sii-api`)
+
+```bash
+npm install @emisso/sii-api
+```
+
+```typescript
+// app/api/sii/[...path]/route.ts
+import { createSiiRouter } from "@emisso/sii-api/next";
+
+export const { GET, POST, PUT, DELETE } = createSiiRouter({
+  databaseUrl: process.env.EMISSO_DATABASE_URL!,
+  basePath: "/api/sii",
+  resolveTenantId: async (req) => {
+    const session = await getSession(req);
+    return session.tenantId;
+  },
+});
+```
+
+#### API Endpoints
 
 ```
 POST   /certificates              Upload certificate (.p12)
@@ -201,31 +165,19 @@ GET    /submissions               Audit trail
 GET    /submissions/:trackId      Submission detail
 ```
 
-## Configuration
+## Architecture
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SII_CERT_PATH` | Path to .p12/.pfx certificate | — |
-| `SII_CERT_PASSWORD` | Certificate password | — |
-| `SII_ENV` | `certification` or `production` | `certification` |
-| `EMISSO_DATABASE_URL` | PostgreSQL connection (API only) | — |
-
-## Development
-
-```bash
-pnpm install
-pnpm build          # Build all packages
-pnpm test           # Run all tests
-pnpm lint           # Typecheck all packages
-```
+Monorepo with two packages:
+- **`@emisso/sii`** (engine): Pure SDK — auth, DTE, RCV, certificates. No database.
+- **`@emisso/sii-api`** (api): REST API — Drizzle ORM + Effect TS + PostgreSQL. Next.js adapter.
 
 ## FAQ
 
 **What is the best TypeScript library for Chilean electronic invoicing?**
-[@emisso/sii](https://github.com/emisso-ai/emisso-sii) is an MIT-licensed TypeScript SDK that covers DTE emission, RCV invoice listing, and certificate authentication against Chile's SII. It supports all 10 DTE types and includes a self-hosted REST API option.
+@emisso/sii is an MIT-licensed TypeScript SDK that covers DTE emission, RCV invoice listing, and certificate authentication against Chile's SII. It supports all 10 DTE types and includes a self-hosted REST API option.
 
 **How do I issue a factura electrónica from Node.js?**
-Install `@emisso/sii`, load your .p12 certificate with `loadCertFromFile()`, authenticate with `authenticate()`, build the DTE XML with `buildDteXml({ tipoDte: "33", ... })`, sign it with `signDte()`, and submit with `uploadDte()`. See the Quick Start above.
+Install `@emisso/sii`, load your .p12 certificate with `loadCertFromFile()`, authenticate with `authenticate()`, build the DTE XML with `buildDteXml({ tipoDte: "33", ... })`, sign it with `signDte()`, and submit with `uploadDte()`.
 
 **Can I read invoices from SII in TypeScript?**
 Yes. Use `listInvoices()` to fetch received or issued invoices from SII's RCV (Registro de Compras y Ventas). You can also use `fetchRcvResumen()` for summaries and `downloadRcvCsv()` for CSV exports.
@@ -248,7 +200,3 @@ The SDK is at v0.1.0. The type system and API surface are stable. Authentication
 | Facturapi Chile | REST API | ✅ | ❌ | ❌ | ❌ |
 | Bsale | REST API | ✅ | ❌ | ❌ | ❌ |
 | Nubox | .NET | ✅ | ❌ | ❌ | ❌ |
-
-## License
-
-MIT — [Emisso](https://emisso.ai)
