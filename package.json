@@ -7,16 +7,22 @@
     "test:run": "pnpm -r test:run",
     "lint": "pnpm -r lint",
     "test:integration": "tsx scripts/test-auth.ts",
-    "clean": "pnpm -r exec rm -rf dist node_modules"
+    "clean": "pnpm -r exec rm -rf dist node_modules",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm run build && changeset publish"
   },
   "engines": {
     "node": ">=18",
     "pnpm": ">=9"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "tsx": "^4.21.0"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
