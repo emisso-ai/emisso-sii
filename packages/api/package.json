@@ -3,19 +3,19 @@
   "version": "0.1.1",
   "description": "Full SII API layer — routes, services, and database for @emisso/sii",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./next": {
       "types": "./dist/adapters/next.d.ts",
-      "import": "./dist/adapters/next.mjs",
-      "require": "./dist/adapters/next.js"
+      "import": "./dist/adapters/next.js",
+      "require": "./dist/adapters/next.cjs"
     }
   },
   "files": [
