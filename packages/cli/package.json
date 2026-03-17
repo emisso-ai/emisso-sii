@@ -1,6 +1,6 @@
 {
   "name": "@emisso/sii-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI for Chilean SII tax authority — certificate auth, invoices, RCV, and RUT utilities",
   "type": "module",
   "main": "./dist/src/index.cjs",
@@ -16,7 +16,9 @@
       "require": "./dist/src/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -26,9 +28,20 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "sii", "chile", "cli", "tax", "dte", "factura", "boleta",
-    "impuestos", "electronic-invoicing", "certificado-digital",
-    "rcv", "rut", "typescript", "sdk"
+    "sii",
+    "chile",
+    "cli",
+    "tax",
+    "dte",
+    "factura",
+    "boleta",
+    "impuestos",
+    "electronic-invoicing",
+    "certificado-digital",
+    "rcv",
+    "rut",
+    "typescript",
+    "sdk"
   ],
   "author": "Emisso <hello@emisso.ai>",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@emisso/sii",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "TypeScript SDK for Chile's SII (Servicio de Impuestos Internos) tax authority integration",
   "main": "./dist/index.cjs",

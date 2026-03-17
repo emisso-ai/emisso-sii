@@ -1,6 +1,6 @@
 {
   "name": "@emisso/sii-api",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Full SII API layer — routes, services, and database for @emisso/sii",
   "type": "module",
   "main": "./dist/index.js",
