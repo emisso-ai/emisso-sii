@@ -1,0 +1,38 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I have searched for [existing issues](https://github.com/emisso-ai/emisso-sii/issues)
+          required: true
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - "@emisso/sii (engine)"
+        - "@emisso/sii-api"
+        - "New package"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
