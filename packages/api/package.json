@@ -60,7 +60,7 @@
     "drizzle-orm": "^0.38.0",
     "effect": "^3.0.0",
     "postgres": "^3.4.0",
-    "zod": "^3.23.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.2.0",
