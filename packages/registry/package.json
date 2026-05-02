@@ -60,7 +60,7 @@
   },
   "dependencies": {
     "@emisso/sii": "workspace:*",
-    "axios": "^1.7.0",
+    "axios": "^1.16.0",
     "axios-retry": "^4.5.0",
     "better-sqlite3": "^11.3.0",
     "cheerio": "^1.0.0",
