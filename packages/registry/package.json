@@ -1,0 +1,86 @@
+{
+  "name": "@emisso/registry-cl",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Chilean active company registry — discovery + enrichment SDK. Aggregates public sources (Empresas en un Día, ChileCompra, CMF, Sofofa, ProChile, Diario Oficial, SII) into a unified, filterable index.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./sources": {
+      "types": "./dist/sources/index.d.ts",
+      "import": "./dist/sources/index.js",
+      "require": "./dist/sources/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest --run",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": [
+    "chile",
+    "empresas",
+    "registry",
+    "prospecting",
+    "icp",
+    "sii",
+    "chilecompra",
+    "mercado-publico",
+    "cmf",
+    "sofofa",
+    "prochile",
+    "diario-oficial",
+    "rut",
+    "b2b",
+    "lead-generation",
+    "sdk",
+    "typescript",
+    "latam"
+  ],
+  "author": "Emisso <hello@emisso.ai>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/emisso-ai/emisso-sii",
+    "directory": "packages/registry"
+  },
+  "homepage": "https://github.com/emisso-ai/emisso-sii/tree/main/packages/registry#readme",
+  "bugs": {
+    "url": "https://github.com/emisso-ai/emisso-sii/issues"
+  },
+  "dependencies": {
+    "@emisso/sii": "workspace:*",
+    "axios": "^1.7.0",
+    "axios-retry": "^4.5.0",
+    "better-sqlite3": "^11.3.0",
+    "cheerio": "^1.0.0",
+    "fast-xml-parser": "^4.5.0",
+    "papaparse": "^5.4.0",
+    "p-queue": "^8.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^22.0.0",
+    "@types/papaparse": "^5.3.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
