@@ -43,7 +43,7 @@ export type CompanyEstado = "activa" | "suspendida" | "no_vigente";
 
 export interface CompanySignals {
   /** Has won at least one ChileCompra licitation. */
-  venceAlEstado?: boolean;
+  vendeAlEstado?: boolean;
   /** Max annual award amount in CLP from ChileCompra. */
   montoAdjudicadoMaxAnual?: number;
   /** Listed on Bolsa de Santiago. */

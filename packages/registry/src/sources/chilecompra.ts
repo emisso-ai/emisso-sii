@@ -342,7 +342,7 @@ export function createChileCompraAdapter(
           rut,
           razonSocial: agg.razonSocial,
           signals: {
-            venceAlEstado: true,
+            vendeAlEstado: true,
             montoAdjudicadoMaxAnual: agg.maxMonto > 0 ? agg.maxMonto : undefined,
           },
         };
