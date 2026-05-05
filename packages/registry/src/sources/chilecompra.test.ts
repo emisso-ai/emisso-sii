@@ -332,7 +332,7 @@ describe("createChileCompraAdapter — sweep", () => {
     const acme = yielded.filter((y) => y.rut === "76543210-3");
     expect(acme).toHaveLength(1);
     expect(acme[0].signals?.montoAdjudicadoMaxAnual).toBe(3_000_000);
-    expect(acme[0].signals?.venceAlEstado).toBe(true);
+    expect(acme[0].signals?.vendeAlEstado).toBe(true);
   });
 
   it("yields each unique RUT exactly once across the sweep", async () => {

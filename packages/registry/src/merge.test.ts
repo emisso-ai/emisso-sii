@@ -49,7 +49,7 @@ describe("mergeCompany", () => {
       hits: hits("sofofa", "chilecompra", "cmf"),
     });
     expect(merged.signals.socioSofofa).toBe(true);
-    expect(merged.signals.venceAlEstado).toBe(true);
+    expect(merged.signals.vendeAlEstado).toBe(true);
     expect(merged.signals.emisorRegulado).toBe(true);
   });
 

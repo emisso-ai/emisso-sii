@@ -43,10 +43,10 @@ describe("RegistryCache", () => {
 
   it("filters by signals", () => {
     cache.upsertCompany(
-      makeCompany({ rut: "1-9", signals: { venceAlEstado: true } }),
+      makeCompany({ rut: "1-9", signals: { vendeAlEstado: true } }),
     );
     cache.upsertCompany(makeCompany({ rut: "2-7", signals: {} }));
-    const matches = cache.findCompanies({ signals: { venceAlEstado: true } });
+    const matches = cache.findCompanies({ signals: { vendeAlEstado: true } });
     expect(matches).toHaveLength(1);
     expect(matches[0].rut).toBe("1-9");
   });

@@ -118,7 +118,7 @@ export function createRegistryCache(filename: string): RegistryCache {
         region: company.region ?? null,
         dotacion_aprox: company.dotacionAprox ?? null,
         tramo_ventas: company.tramoVentas ?? null,
-        signal_vende_estado: company.signals.venceAlEstado ? 1 : 0,
+        signal_vende_estado: company.signals.vendeAlEstado ? 1 : 0,
         signal_cotizada: company.signals.cotizada ? 1 : 0,
         signal_socio_sofofa: company.signals.socioSofofa ? 1 : 0,
         signal_exportadora: company.signals.exportadora ? 1 : 0,
@@ -194,7 +194,7 @@ function buildFilterQuery(filters: IcpFilters, count = false) {
     }
   }
   if (filters.signals) {
-    if (filters.signals.venceAlEstado) wheres.push(`signal_vende_estado = 1`);
+    if (filters.signals.vendeAlEstado) wheres.push(`signal_vende_estado = 1`);
     if (filters.signals.cotizada) wheres.push(`signal_cotizada = 1`);
     if (filters.signals.socioSofofa) wheres.push(`signal_socio_sofofa = 1`);
     if (filters.signals.exportadora) wheres.push(`signal_exportadora = 1`);

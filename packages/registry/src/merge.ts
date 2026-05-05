@@ -100,7 +100,7 @@ function pickField<K extends keyof ChileanCompany>(
 function deriveSignals(partials: Map<SourceId, SourcePartial>): CompanySignals {
   const signals: CompanySignals = {};
   for (const partial of partials.values()) {
-    if (partial.signals?.venceAlEstado) signals.venceAlEstado = true;
+    if (partial.signals?.vendeAlEstado) signals.vendeAlEstado = true;
     if (partial.signals?.cotizada) signals.cotizada = true;
     if (partial.signals?.socioSofofa) signals.socioSofofa = true;
     if (partial.signals?.exportadora) signals.exportadora = true;
@@ -117,7 +117,7 @@ function deriveSignals(partials: Map<SourceId, SourcePartial>): CompanySignals {
   if (partials.has("sofofa")) signals.socioSofofa = true;
   if (partials.has("cmf")) signals.emisorRegulado = true;
   if (partials.has("bolsa-santiago")) signals.cotizada = true;
-  if (partials.has("chilecompra")) signals.venceAlEstado = true;
+  if (partials.has("chilecompra")) signals.vendeAlEstado = true;
   return signals;
 }
 
@@ -143,7 +143,7 @@ function computeScore(company: ChileanCompany): number {
   if (monto > 1_000_000_000) score += 20;
   else if (monto > 200_000_000) score += 12;
   else if (monto > 50_000_000) score += 6;
-  else if (company.signals.venceAlEstado) score += 3;
+  else if (company.signals.vendeAlEstado) score += 3;
 
   // Headcount precision: 10 points if known.
   if (typeof company.dotacionAprox === "number") score += 10;
