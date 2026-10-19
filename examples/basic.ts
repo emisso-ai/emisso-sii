@@ -1,14 +1,5 @@
 /**
- * Historical SDK example, retained for reference only.
- * @emisso/sii, @emisso/sii-api, and @emisso/sii-cli are discontinued:
- * no further maintenance or new versions. Existing versions and source remain.
- * This example may use incomplete or unimplemented APIs and is not guaranteed
- * to run end to end. For new integrations, see Notta's REST API and MCP:
- * https://notta.cl/docs/api-reference and https://notta.cl/docs/mcp.
- * These services are not drop-in SDK replacements.
- * registry-cl is outside this retirement.
- *
- * Original example: Authenticate with SII and issue a Factura Electronica (type 33).
+ * Basic example: Authenticate with SII and issue a Factura Electronica (type 33).
  *
  * Prerequisites:
  * - A valid .p12 digital certificate from SII

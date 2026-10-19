@@ -1,11 +1,10 @@
-# @emisso/sii — Historical roadmap
+# @emisso/sii — Roadmap
 
-> Closed: `@emisso/sii`, `@emisso/sii-api`, and `@emisso/sii-cli` are discontinued and receive no maintenance or new versions. Existing published versions, source, and licenses remain available. The proposals and research below are preserved as historical context, not planned work or a statement of current implementation.
+> Living document for the implementation journey of the SII SDK.
+> Updated as phases complete. Each phase links to relevant research and decisions made.
 > Full research: `docs/research/SYNTHESIS.md` | Individual reports: `docs/research/*.md`
 
-For new integrations, use Notta's [REST API](https://notta.cl/docs/api-reference) or [MCP](https://notta.cl/docs/mcp); these services are not drop-in replacements for SDK imports. `@emisso/registry-cl` is outside this retirement, with no new maintenance commitment implied.
-
-## Historical snapshot (March 12, 2026)
+## Current State
 
 Scaffolded TypeScript SDK with complete type system (Zod schemas), utilities (RUT validation, env config), and module stubs for auth, DTE, folios, recepción, and estado. Nothing is implemented yet — all functions throw "Not implemented".
 
