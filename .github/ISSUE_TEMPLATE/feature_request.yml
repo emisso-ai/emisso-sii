@@ -1,7 +1,13 @@
-name: Feature Request
-description: Suggest a new feature or improvement
+name: Registry or documentation proposal
+description: Propose a registry change or documentation improvement
 labels: ["enhancement"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        The public SII SDKs are discontinued; new SDK features and fixes are not being accepted.
+        This form is for registry or documentation proposals and does not promise acceptance or a release.
+        See the [retirement notice](https://github.com/emisso-ai/emisso-sii#readme).
   - type: checkboxes
     id: preflight
     attributes:
@@ -14,9 +20,8 @@ body:
     attributes:
       label: Package
       options:
-        - "@emisso/sii (engine)"
-        - "@emisso/sii-api"
-        - "New package"
+        - "@emisso/registry-cl"
+        - "Documentation"
     validations:
       required: true
   - type: textarea

@@ -1,7 +1,13 @@
 name: Bug Report
-description: Report a bug in @emisso/sii
+description: Report a registry issue or documentation error
 labels: ["bug"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        The public SII SDKs are discontinued and will not receive fixes or new versions.
+        This form is for registry issues or documentation errors. For security reports, follow [SECURITY.md](https://github.com/emisso-ai/emisso-sii/blob/main/SECURITY.md) instead of opening a public issue.
+        See the [retirement notice](https://github.com/emisso-ai/emisso-sii#readme).
   - type: checkboxes
     id: preflight
     attributes:
@@ -16,8 +22,8 @@ body:
     attributes:
       label: Package
       options:
-        - "@emisso/sii (engine)"
-        - "@emisso/sii-api"
+        - "@emisso/registry-cl"
+        - "Documentation"
     validations:
       required: true
   - type: input

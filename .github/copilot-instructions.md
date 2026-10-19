@@ -1,11 +1,15 @@
-# @emisso/sii — Copilot Instructions
+# @emisso/sii (discontinued) — Copilot Instructions
 
-TypeScript SDK for Chile's SII (Servicio de Impuestos Internos) — electronic invoicing, certificate auth, and invoice listing.
+`@emisso/sii`, `@emisso/sii-api`, and `@emisso/sii-cli` are discontinued. Preserve their published versions, source, history, and licenses; do not add SDK features, fixes, release changesets, or version bumps. Their architecture and examples below are historical and may contain unimplemented functions.
+
+For new Notta integrations, use https://notta.cl/docs/api-reference or https://notta.cl/docs/mcp. These are service interfaces, not drop-in SDK replacements. `@emisso/registry-cl` is outside this retirement; do not archive the monorepo or infer a new maintenance commitment.
 
 ## Monorepo Structure
 
 - `packages/engine/` — `@emisso/sii`: Pure SDK, no database. Auth, DTE, RCV, certificates.
 - `packages/api/` — `@emisso/sii-api`: REST API with Drizzle ORM + Effect TS + PostgreSQL.
+- `packages/cli/` — `@emisso/sii-cli`: Discontinued CLI.
+- `packages/registry/` — `@emisso/registry-cl`: Outside this retirement.
 
 ## Code Style
 
@@ -14,13 +18,13 @@ TypeScript SDK for Chile's SII (Servicio de Impuestos Internos) — electronic i
 - Engine has zero side effects beyond HTTP calls to SII
 - API uses Effect TS layers: Repo → Service → Handler
 - Tests: vitest; API integration tests use PGLite
-- Conventional Commits: `feat(engine): add folio validation`
+- Conventional Commits
 
 ## Testing
 
 ```bash
-pnpm test:run     # CI mode
-pnpm test         # Watch mode
+pnpm test:run     # registry-cl only, CI mode
+pnpm test         # registry-cl only, watch mode
 ```
 
 ## Key Patterns
