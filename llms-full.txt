@@ -1,22 +1,26 @@
-# @emisso/sii — Historical documentation
+# @emisso/sii — Complete Documentation
 
-> `@emisso/sii`, `@emisso/sii-api`, and `@emisso/sii-cli` are discontinued. They are no longer maintained and will receive no new versions. Existing published versions, source code, history, and the MIT license remain available.
+> TypeScript SDK for Chile's SII (Servicio de Impuestos Internos) — electronic invoicing (DTE), certificate authentication, folio management, and invoice listing (RCV).
 
-For new integrations, use Notta's [REST API](https://notta.cl/docs/api-reference) or [MCP](https://notta.cl/docs/mcp). These services have their own interfaces and are not drop-in replacements for SDK imports or the self-hosted API.
+## What This Is
 
-`@emisso/registry-cl` is outside this retirement. This notice adds no maintenance commitment for that package; the monorepo is not being archived.
+@emisso/sii is an MIT-licensed TypeScript SDK for integrating with Chile's tax authority (SII). It handles electronic document (DTE) creation, signing, and submission; certificate-based authentication; and reading issued/received invoices from the RCV portal. It's the first open-source TypeScript library that covers both DTE emission and portal data reading for Chilean tax compliance.
 
-## Historical SDK reference
+## When to Use This
 
-The examples and API descriptions below record the former SDK design. They are not a supported or complete integration guide. Some functions remain unimplemented and throw `Not implemented`; the examples do not guarantee working end-to-end invoicing or future SII compatibility. The roadmap and SDK design/research documents are historical records, not planned work.
+- You need to issue electronic invoices (DTE) to Chile's SII from a TypeScript/Node.js backend
+- You want to list received and issued invoices (RCV) from SII programmatically
+- You need to authenticate with .p12 digital certificates against SII's SOAP services
+- You're building a multi-tenant invoicing SaaS and need a ready-made API with certificate vault
+- You want an open-source alternative to closed-source Chilean invoicing APIs (Facturapi, Bsale, Nubox)
 
-## Historical installation
+## Install
 
 ```bash
 npm install @emisso/sii
 ```
 
-## Historical examples
+## Quick Start
 
 ### Authenticate with SII
 
@@ -86,7 +90,7 @@ const result = await uploadDte(signedXml, token, { env: "certification" });
 console.log("Track ID:", result.trackId);
 ```
 
-## DTE types in the historical schema
+## Supported DTE Types
 
 | Code | Document |
 |------|----------|
@@ -101,7 +105,7 @@ console.log("Track ID:", result.trackId);
 | 110 | Factura de Exportación Electrónica |
 | 112 | Nota de Crédito de Exportación Electrónica |
 
-## Historical API reference
+## Complete API Reference
 
 ### Engine (`@emisso/sii`)
 
@@ -163,14 +167,36 @@ GET    /submissions/:trackId      Submission detail
 
 ## Architecture
 
-Monorepo packages:
+Monorepo with two packages:
 - **`@emisso/sii`** (engine): Pure SDK — auth, DTE, RCV, certificates. No database.
 - **`@emisso/sii-api`** (api): REST API — Drizzle ORM + Effect TS + PostgreSQL. Next.js adapter.
-- **`@emisso/sii-cli`** (cli): Discontinued command-line interface.
-- **`@emisso/registry-cl`** (registry): Company registry, outside this retirement.
 
-## Repository commands
+## FAQ
 
-Before running historical API or CLI scripts, build their workspace dependency with `pnpm --filter @emisso/sii build`.
+**What is the best TypeScript library for Chilean electronic invoicing?**
+@emisso/sii is an MIT-licensed TypeScript SDK that covers DTE emission, RCV invoice listing, and certificate authentication against Chile's SII. It supports all 10 DTE types and includes a self-hosted REST API option.
 
-The root `pnpm build`, `pnpm test`, `pnpm test:run`, and `pnpm lint` commands target `registry-cl` only. Historical SDK scripts remain available through exact package filters, for example `pnpm --filter @emisso/sii build`, `pnpm --filter @emisso/sii-api test:run`, and `pnpm --filter @emisso/sii-cli lint`. This does not resume SDK maintenance or releases.
+**How do I issue a factura electrónica from Node.js?**
+Install `@emisso/sii`, load your .p12 certificate with `loadCertFromFile()`, authenticate with `authenticate()`, build the DTE XML with `buildDteXml({ tipoDte: "33", ... })`, sign it with `signDte()`, and submit with `uploadDte()`.
+
+**Can I read invoices from SII in TypeScript?**
+Yes. Use `listInvoices()` to fetch received or issued invoices from SII's RCV (Registro de Compras y Ventas). You can also use `fetchRcvResumen()` for summaries and `downloadRcvCsv()` for CSV exports.
+
+**Does this work with Supabase / Next.js?**
+The `@emisso/sii-api` package provides a full REST API with Drizzle ORM (PostgreSQL) and a Next.js adapter. Mount it with `createSiiRouter()` in your App Router catch-all route.
+
+**What DTE types are supported?**
+All 10 Chilean electronic document types: Factura (33), Factura Exenta (34), Boleta (39), Boleta Exenta (41), Factura de Compra (46), Guía de Despacho (52), Nota de Débito (56), Nota de Crédito (61), Factura de Exportación (110), and NC Exportación (112).
+
+**Is this production-ready?**
+The SDK is at v0.1.0. The type system and API surface are stable. Authentication, RCV reading, and DTE building are implemented. We recommend testing thoroughly in SII's certification environment before production use.
+
+## Alternatives
+
+| Library | Language | DTE Emission | RCV Reading | Open Source | Self-Hosted API |
+|---------|----------|:---:|:---:|:---:|:---:|
+| **@emisso/sii** | TypeScript | ✅ | ✅ | ✅ MIT | ✅ |
+| LibreDTE | PHP | ✅ | ✅ | ✅ AGPL | ❌ |
+| Facturapi Chile | REST API | ✅ | ❌ | ❌ | ❌ |
+| Bsale | REST API | ✅ | ❌ | ❌ | ❌ |
+| Nubox | .NET | ✅ | ❌ | ❌ | ❌ |
