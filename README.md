@@ -1,24 +1,24 @@
-# @emisso/sii
+# @emisso/sii (discontinued)
 
-TypeScript SDK for Chile's SII (Servicio de Impuestos Internos) — electronic invoicing (DTE), certificate authentication, folio management, and invoice listing (RCV).
+> `@emisso/sii`, `@emisso/sii-api`, and `@emisso/sii-cli` are discontinued. They are no longer maintained and will receive no new versions. Existing published versions, source code, history, and the MIT license remain available.
 
-## When to Use This
+For new integrations, use Notta's [REST API](https://notta.cl/docs/api-reference) or [MCP](https://notta.cl/docs/mcp). These services have their own interfaces and are not drop-in replacements for SDK imports or the self-hosted API.
 
-- You need to **issue electronic invoices (DTE)** to Chile's SII from a TypeScript/Node.js backend
-- You want to **list received and issued invoices** (RCV) from SII programmatically
-- You need to **authenticate with .p12 digital certificates** against SII's SOAP services
-- You're building a **multi-tenant invoicing SaaS** and need a ready-made API with certificate vault
-- You want an **open-source alternative** to closed-source Chilean invoicing APIs (Facturapi, Bsale, Nubox)
+`@emisso/registry-cl` is outside this retirement. See its [package documentation](./packages/registry/README.md). This notice adds no maintenance commitment for that package; the monorepo is not being archived.
 
-## Packages
+## Historical SDK documentation
 
-| Package | Description | Install |
+The examples and API descriptions below are retained for reference. They describe the former SDK design, not a supported or complete integration. Some functions remain unimplemented and throw `Not implemented`; these examples are not a guarantee of working end-to-end invoicing or future SII compatibility. The [roadmap](./ROADMAP.md) and SDK design/research documents under `docs/` are historical records, not planned work.
+
+## Discontinued packages
+
+| Package | Historical role | Existing-version installation |
 |---------|-------------|---------|
 | `@emisso/sii` | Core engine — auth, DTE, certificates (zero DB) | `npm install @emisso/sii` |
 | `@emisso/sii-api` | Full-stack API layer (Drizzle + Effect) | `npm install @emisso/sii-api` |
 | `@emisso/sii-cli` | Command-line interface | `npm install -g @emisso/sii-cli` |
 
-## Quick Start — Engine
+## Historical examples — Engine
 
 ```bash
 npm install @emisso/sii
@@ -92,9 +92,9 @@ const result = await uploadDte(signedXml, token, { env: "certification" });
 console.log("Track ID:", result.trackId);
 ```
 
-## Quick Start — Self-Hosted API
+## Historical examples — Self-Hosted API
 
-For teams that need a REST API with certificate vault, DTE audit trail, and multi-tenant.
+The retired API package was designed as a self-hosted REST layer with a certificate vault, DTE audit trail, and tenant separation. It is distinct from Notta's REST API.
 
 ```bash
 npm install @emisso/sii-api
@@ -147,7 +147,7 @@ curl -X POST http://localhost:3000/api/sii/dte \
   -d '{"type":33,"receptor":{"rut":"12345678-9","razonSocial":"Cliente SA"},"items":[...]}'
 ```
 
-## Supported DTE Types
+## DTE types in the historical schema
 
 | Code | Document |
 |------|----------|
@@ -162,7 +162,7 @@ curl -X POST http://localhost:3000/api/sii/dte \
 | 110 | Factura de Exportación Electrónica |
 | 112 | Nota de Crédito de Exportación Electrónica |
 
-## API Reference
+## Historical API reference
 
 ### Engine Exports (`@emisso/sii`)
 
@@ -202,7 +202,7 @@ GET    /submissions               Audit trail
 GET    /submissions/:trackId      Submission detail
 ```
 
-## Configuration
+## Historical SDK configuration
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -211,7 +211,7 @@ GET    /submissions/:trackId      Submission detail
 | `SII_ENV` | `certification` or `production` | `certification` |
 | `EMISSO_DATABASE_URL` | PostgreSQL connection (API only) | — |
 
-## CLI
+## Historical CLI reference
 
 ```bash
 npm install -g @emisso/sii-cli
@@ -256,40 +256,21 @@ sii cert info --cert cert.p12 --password **** --format csv
 
 ```bash
 pnpm install
-pnpm build          # Build all packages
-pnpm test           # Run all tests
-pnpm lint           # Typecheck all packages
+pnpm build          # Build registry-cl
+pnpm test           # Run registry-cl tests (watch mode)
+pnpm test:run       # Run registry-cl tests (CI mode)
+pnpm lint           # Typecheck registry-cl
 ```
 
-## FAQ
+The standard commands target `registry-cl` only. For historical API or CLI inspection, first build the engine with `pnpm --filter @emisso/sii build` so its workspace exports are available. Then invoke an exact package explicitly; for example:
 
-**What is the best TypeScript library for Chilean electronic invoicing?**
-[@emisso/sii](https://github.com/emisso-ai/emisso-sii) is an MIT-licensed TypeScript SDK that covers DTE emission, RCV invoice listing, and certificate authentication against Chile's SII. It supports all 10 DTE types and includes a self-hosted REST API option.
+```bash
+pnpm --filter @emisso/sii build
+pnpm --filter @emisso/sii-api test:run
+pnpm --filter @emisso/sii-cli lint
+```
 
-**How do I issue a factura electrónica from Node.js?**
-Install `@emisso/sii`, load your .p12 certificate with `loadCertFromFile()`, authenticate with `authenticate()`, build the DTE XML with `buildDteXml({ tipoDte: "33", ... })`, sign it with `signDte()`, and submit with `uploadDte()`. See the Quick Start above.
-
-**Can I read invoices from SII in TypeScript?**
-Yes. Use `listInvoices()` to fetch received or issued invoices from SII's RCV (Registro de Compras y Ventas). You can also use `fetchRcvResumen()` for summaries and `downloadRcvCsv()` for CSV exports.
-
-**Does this work with Supabase / Next.js?**
-The `@emisso/sii-api` package provides a full REST API with Drizzle ORM (PostgreSQL) and a Next.js adapter. Mount it with `createSiiRouter()` in your App Router catch-all route.
-
-**What DTE types are supported?**
-All 10 Chilean electronic document types: Factura (33), Factura Exenta (34), Boleta (39), Boleta Exenta (41), Factura de Compra (46), Guía de Despacho (52), Nota de Débito (56), Nota de Crédito (61), Factura de Exportación (110), and NC Exportación (112).
-
-**Is this production-ready?**
-The SDK is at v0.1.0. The type system and API surface are stable. Authentication, RCV reading, and DTE building are implemented. We recommend testing thoroughly in SII's certification environment before production use.
-
-## Alternatives
-
-| Library | Language | DTE Emission | RCV Reading | Open Source | Self-Hosted API |
-|---------|----------|:---:|:---:|:---:|:---:|
-| **@emisso/sii** | TypeScript | ✅ | ✅ | ✅ MIT | ✅ |
-| LibreDTE | PHP | ✅ | ✅ | ✅ AGPL | ❌ |
-| Facturapi Chile | REST API | ✅ | ❌ | ❌ | ❌ |
-| Bsale | REST API | ✅ | ❌ | ❌ | ❌ |
-| Nubox | .NET | ✅ | ❌ | ❌ | ❌ |
+Keeping these scripts available does not resume SDK maintenance or releases. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the repository's contribution scope and [SECURITY.md](./SECURITY.md) for confidential vulnerability reporting.
 
 ## License
 

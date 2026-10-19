@@ -1,6 +1,10 @@
-# @emisso/sii
+# @emisso/sii (discontinued)
 
-TypeScript SDK for Chile's SII (Servicio de Impuestos Internos) — electronic invoicing (DTE), digital certificate authentication, folio management (CAF), RCV invoice listing, and document status queries. First open-source TypeScript library covering both DTE emission and portal data reading for Chilean tax integration.
+`@emisso/sii`, `@emisso/sii-api`, and `@emisso/sii-cli` are discontinued. They receive no maintenance or new versions. Preserve published versions, source code, history, and licenses. Do not add SDK features, release changesets, or version bumps.
+
+For new integrations, refer to Notta's [REST API](https://notta.cl/docs/api-reference) or [MCP](https://notta.cl/docs/mcp). They are not drop-in replacements for SDK imports or the self-hosted API.
+
+`@emisso/registry-cl` is outside this retirement; do not infer a new maintenance commitment or archive the monorepo. The SDK architecture, examples, roadmap, and design documents are historical reference. They may describe incomplete APIs, including functions that throw `Not implemented`, and must not be promoted as a complete integration.
 
 ## Structure
 
@@ -21,25 +25,32 @@ emisso-sii/
 │   │   │   ├── portal/          Web portal login + session management
 │   │   │   └── rcv/             RCV API (summaries, detail, CSV download)
 │   │   └── tests/
-│   └── api/                 @emisso/sii-api — Effect TS, Drizzle, PostgreSQL
-│       ├── src/
-│       │   ├── core/effect/     AppError, http-response, repo-helpers
-│       │   ├── db/schema/       Drizzle tables (certificates, dte, folios, rcv)
-│       │   ├── repos/           Data access layer
-│       │   ├── services/        Business logic
-│       │   ├── handlers/        HTTP handlers + router
-│       │   ├── adapters/        Next.js adapter
-│       │   └── validation/      Zod request schemas
-│       └── tests/helpers/       PGLite test setup
+│   ├── api/                 @emisso/sii-api — Effect TS, Drizzle, PostgreSQL
+│   │   ├── src/
+│   │   │   ├── core/effect/     AppError, http-response, repo-helpers
+│   │   │   ├── db/schema/       Drizzle tables (certificates, dte, folios, rcv)
+│   │   │   ├── repos/           Data access layer
+│   │   │   ├── services/        Business logic
+│   │   │   ├── handlers/        HTTP handlers + router
+│   │   │   ├── adapters/        Next.js adapter
+│   │   │   └── validation/      Zod request schemas
+│   │   └── tests/helpers/       PGLite test setup
+│   ├── cli/                 @emisso/sii-cli — discontinued CLI
+│   └── registry/            @emisso/registry-cl — outside this retirement
 ```
 
 ## Commands
 
 ```bash
-pnpm build        # Build all packages (tsup)
-pnpm test:run     # Run all tests (CI mode)
-pnpm lint         # Typecheck all packages (tsc --noEmit)
+pnpm build        # Build registry-cl
+pnpm test         # Run registry-cl tests (watch mode)
+pnpm test:run     # Run registry-cl tests (CI mode)
+pnpm lint         # Typecheck registry-cl
 ```
+
+Before running historical API or CLI scripts, build their workspace dependency with `pnpm --filter @emisso/sii build`.
+
+For historical SDK inspection, use an exact package filter: `pnpm --filter @emisso/sii build`, `pnpm --filter @emisso/sii-api test:run`, or `pnpm --filter @emisso/sii-cli lint`. These scripts do not resume SDK maintenance or releases.
 
 ## Code Patterns
 
