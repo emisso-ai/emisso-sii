@@ -71,6 +71,12 @@ export const DteDocumentSchema = z.object({
   tipoDte: DteTypeSchema,
   folio: z.number().positive(),
   fechaEmision: z.string().describe("ISO date string YYYY-MM-DD"),
+  indServicio: z
+    .union([z.literal(1), z.literal(2), z.literal(3)])
+    .optional()
+    .describe(
+      "Boletas only: service indicator (1=periodic, 2=periodic domiciliary, 3=other services). Omitted from the XML unless explicitly set."
+    ),
   emisor: EmisorSchema,
   receptor: ReceptorSchema,
   items: z.array(DteItemSchema).min(1),
@@ -101,6 +107,14 @@ export const FolioRangeSchema = z.object({
   fechaAutorizacion: z.string(),
   privateKey: z.string().optional().describe("RSA private key from CAF XML"),
   publicKey: z.string().optional().describe("RSA public key from CAF XML"),
+  cafXml: z
+    .string()
+    .optional()
+    .describe(
+      "Raw CAF XML exactly as issued by SII. Required to build the TED: the <CAF> block " +
+        "(including SII's own <FRMA> signature over the authorization data) must be re-inserted " +
+        "verbatim into every stamped DTE and cannot be reconstructed from the parsed fields."
+    ),
 });
 export type FolioRange = z.infer<typeof FolioRangeSchema>;
 

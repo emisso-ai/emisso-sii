@@ -10,9 +10,11 @@
 import {
   authenticate,
   buildDteXml,
+  applyTimbre,
   signDte,
   uploadDte,
   queryUploadStatus,
+  loadCafFromFile,
   loadConfigFromEnv,
   type DteDocument,
 } from "@emisso/sii";
@@ -47,10 +49,12 @@ async function main() {
     },
     items: [
       {
+        // Line amounts are GROSS (IVA-included) — buildDteXml converts them
+        // to net for facturas so the detail matches MntNeto exactly.
         nombre: "Servicio de Consultoría en Software",
         cantidad: 10,
-        precioUnitario: 50000,
-        montoItem: 500000,
+        precioUnitario: 59500,
+        montoItem: 595000,
       },
     ],
     montoNeto: 500000,
@@ -62,15 +66,20 @@ async function main() {
   const xml = await buildDteXml(document);
   console.log("DTE XML built successfully");
 
-  // 5. Sign the DTE
-  const signedXml = await signDte(xml, config.certPath, config.certPassword);
+  // 5. Stamp with the CAF timbre (TED) — must happen BEFORE signing
+  const caf = await loadCafFromFile("./caf-33.xml");
+  const stampedXml = await applyTimbre(xml, caf);
+  console.log("DTE stamped with TED");
+
+  // 6. Sign the DTE
+  const signedXml = await signDte(stampedXml, config.certPath, config.certPassword);
   console.log("DTE signed successfully");
 
-  // 6. Upload to SII
+  // 7. Upload to SII
   const uploadResponse = await uploadDte(signedXml, token, config);
   console.log("DTE uploaded, trackId:", uploadResponse.trackId);
 
-  // 7. Check status (poll after a few seconds in real usage)
+  // 8. Check status (poll after a few seconds in real usage)
   const status = await queryUploadStatus(uploadResponse.trackId, token, config);
   console.log("DTE status:", status.status, "-", status.glosa);
 }
