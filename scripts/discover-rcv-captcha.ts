@@ -10,10 +10,32 @@ import { splitRut, getPortalAuthUrl, getPortalReferencia } from "../packages/eng
 import { createSiiHttpClient } from "../packages/engine/src/http";
 import { CookieJar, Cookie } from "tough-cookie";
 
+
 async function main() {
+
+  // --- Load .env ---
+  function loadEnv(): Record<string, string> {
+    const scriptDir = path.dirname(new URL(import.meta.url).pathname);
+    const envPath = path.resolve(scriptDir, "..", ".env");
+    if (!fs.existsSync(envPath)) return {};
+    const content = fs.readFileSync(envPath, "utf-8");
+    const vars: Record<string, string> = {};
+    for (const line of content.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eqIdx = trimmed.indexOf("=");
+      if (eqIdx === -1) continue;
+      vars[trimmed.slice(0, eqIdx).trim()] = trimmed.slice(eqIdx + 1).trim();
+    }
+    return vars;
+  }
+
+
   await purgeDefaultStorages();
 
-  const { rutBody, dv } = splitRut("78137692-2");
+  const env = loadEnv();
+
+  const { rutBody, dv } = splitRut(env.SII_RUT);
   const authUrl = getPortalAuthUrl();
   const referencia = getPortalReferencia("production");
   const loginUrl = `${authUrl}/AUT2000/InicioAutenticacion/IngresoRutClave.html?${referencia}`;
@@ -49,7 +71,7 @@ async function main() {
       // Login
       await page.waitForSelector("#rutcntr", { timeout: 30000 });
       await page.fill("#rutcntr", `${rutBody}-${dv}`);
-      await page.fill("#clave", "Ludotte6.");
+      await page.fill("#clave", env.SII_PASSWORD);
       await Promise.all([
         page.waitForNavigation({ waitUntil: "networkidle", timeout: 30000 }),
         page.click("#bt_ingresar"),
@@ -94,7 +116,7 @@ async function main() {
               entry.responseStatus = resp.status();
               entry.responseBody = body.slice(0, 3000);
             }
-          } catch {}
+          } catch { }
         }
       });
 

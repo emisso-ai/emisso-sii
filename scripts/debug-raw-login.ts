@@ -2,11 +2,32 @@ import { PlaywrightCrawler, log } from "crawlee";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+
+// --- Load .env ---
+function loadEnv(): Record<string, string> {
+  const scriptDir = path.dirname(new URL(import.meta.url).pathname);
+  const envPath = path.resolve(scriptDir, "..", ".env");
+  if (!fs.existsSync(envPath)) return {};
+  const content = fs.readFileSync(envPath, "utf-8");
+  const vars: Record<string, string> = {};
+  for (const line of content.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eqIdx = trimmed.indexOf("=");
+    if (eqIdx === -1) continue;
+    vars[trimmed.slice(0, eqIdx).trim()] = trimmed.slice(eqIdx + 1).trim();
+  }
+  return vars;
+}
+
+
 const DIR = path.join(path.dirname(new URL(import.meta.url).pathname), "debug-output");
 fs.mkdirSync(DIR, { recursive: true });
 
-const RUT = "78137692-2";
-const CLAVE = "Ludotte6.";
+const env = loadEnv();
+
+const RUT = env.SII_RUT;
+const CLAVE = env.SII_PASSWORD;
 const REFERENCIA = "https://misiir.sii.cl/cgi_misii/siihome.cgi";
 const LOGIN_URL = `https://zeusr.sii.cl/AUT2000/InicioAutenticacion/IngresoRutClave.html?${REFERENCIA}`;
 
@@ -51,7 +72,7 @@ const crawler = new PlaywrightCrawler({
     // Submit the form
     console.log("\nSubmitting form...");
     await Promise.all([
-      page.waitForNavigation({ waitUntil: "networkidle", timeout: 30000 }).catch(() => {}),
+      page.waitForNavigation({ waitUntil: "networkidle", timeout: 30000 }).catch(() => { }),
       page.click("#bt_ingresar"),
     ]);
 
